@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocabulary Flashcard Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f8ff;
+            padding: 20px;
+        }
+        #flashcard {
+            font-size: 4em;
+            margin: 50px 0;
+            min-height: 300px;
+        }
+        #translation {
+            font-size: 24px;
+            color: #555;
+            margin-bottom: 30px;
+        }
+        #scrambled-container {
+            display: none;
+            margin-top: 50px;
+        }
+        .letter {
+            display: inline-block;
+            font-size: 36px;
+            margin: 5px;
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .letter.hidden {
+            visibility: hidden;
+            opacity: 0;
+            transform: scale(0);
+            margin: 0;
+            padding: 0;
+            width: 0;
+            height: 0;
+        }
+        .letter.visible {
+            visibility: visible;
+            opacity: 1;
+            transform: scale(1);
+        }
+        .control-btn {
+            display: inline-block;
+            font-size: 24px;
+            margin: 5px;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        #space-btn {
+            background-color: #9b59b6;
+        }
+        #delete-btn {
+            background-color: #e74c3c;
+        }
+        #message {
+            font-size: 24px;
+            margin: 20px 0;
+            min-height: 30px;
+            color: #2c3e50;
+        }
+        .nav-button {
+            margin: 20px 10px;
+            padding: 10px 25px;
+            font-size: 18px;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            min-width: 120px;
+        }
+        #next-btn {
+            background-color: #3498db;
+        }
+        #prev-btn {
+            background-color: #e67e22;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .controls-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        #attempt-display {
+            font-size: 24px;
+            margin: 20px 0;
+            min-height: 50px;
+            letter-spacing: 5px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Vocabulary Flashcards</h1>
+    <div id="progress"></div>
+    <div id="flashcard"></div>
+    <button id="speak-btn">Hear Word Again</button>
+    <div id="scrambled-container">
+        <h2>Unscramble the word:</h2>
+        <div id="scrambled-letters"></div>
+        <div id="attempt-display"></div>
+        <div class="controls-container">
+            <button id="space-btn" class="control-btn">Space</button>
+            <button id="delete-btn" class="control-btn">Delete</button>
+        </div>
+        <div id="message"></div>
+    </div>
+    
+    <div class="nav-buttons">
+        <button id="prev-btn" class="nav-button">Previous</button>
+        <button id="next-btn" class="nav-button">Next</button>
+    </div>
+
+        <div id="translation"></div>
+
+    <script>
+        // Vocabulary words and translations
+        const vocabulary = [
+{ word: "an-gugaliya", translation: "man" },
+            { word: "gornabola", translation: "wallaby" },
+            { word: "a-rrana", translation: "spear" },
+            { word: "an-gugaliya wornabola a-rrana", translation: "man spears wallaby" },
+            { word: "rrawa", translation: "camp" },
+            { word: "jin-gugaliya", translation: "woman" },
+            { word: "gu-galiya yerrcha", translation: "people" },
+            { word: "aburr-ni", translation: "they at"},
+{ word: "gu-galiya yerrcha rrawa aburr-ni", translation: "people at camp" },
+            { word: "gun-ngardapa", translation: "1" },
+            { word: "awirri-jirrapa", translation: "2" },
+            { word: "awirri-jirrapa gu-galiya yerrcha rrapa  gornabola an-ngardapa", translation: "2 people and 1 wallaby" },
+            { word: "bol", translation: "firewood, fire" },
+            { word: "an-gugaliya  gornabola ana-ganja rrawa", translation: "man brought wallaby to camp" },
+            { word: "abi-yalpuna", translation: "they cooked it" },
+            { word: " awu-barra aburr-ni", translation: "they ate it" },
+            { word: "lika", translation: "then" },
+            { word: "bol", translation: "firewood, fire" },
+          { word: "bol", translation: "firewood, fire" },
+            { word: "bol", translation: "firewood, fire" },          
+{ word: "bol", translation: "firewood, fire" },
+            { word: "bol", translation: "firewood, fire" },
+          { word: "bol", translation: "firewood, fire" },
+            { word: "bol", translation: "firewood, fire" }
+        ];
+        
+        // Game variables
+        let currentWordIndex = 0;
+        let flashCount = 0;
+        const totalFlashes = 8;
+        let flashInterval;
+        let selectedLetters = [];
+        let currentWord = "";
+        let speechSynth = window.speechSynthesis;
+        let scrambledLetters = [];
+        
+        // DOM elements
+        const flashcardEl = document.getElementById('flashcard');
+        const translationEl = document.getElementById('translation');
+        const scrambledContainerEl = document.getElementById('scrambled-container');
+        const scrambledLettersEl = document.getElementById('scrambled-letters');
+        const attemptDisplayEl = document.getElementById('attempt-display');
+        const messageEl = document.getElementById('message');
+        const nextBtnEl = document.getElementById('next-btn');
+        const prevBtnEl = document.getElementById('prev-btn');
+        const progressEl = document.getElementById('progress');
+        const speakBtnEl = document.getElementById('speak-btn');
+        const spaceBtnEl = document.getElementById('space-btn');
+        const deleteBtnEl = document.getElementById('delete-btn');
+        
+        // Initialize the game
+        function init() {
+            updateNavigationButtons();
+            showCurrentWord();
+            nextBtnEl.addEventListener('click', nextWord);
+            prevBtnEl.addEventListener('click', prevWord);
+            speakBtnEl.addEventListener('click', speakCurrentWord);
+            spaceBtnEl.addEventListener('click', addSpace);
+            deleteBtnEl.addEventListener('click', deleteLastLetter);
+            
+            // Chrome requires user interaction before speech works
+            document.addEventListener('click', function firstClick() {
+                document.removeEventListener('click', firstClick);
+            });
+        }
+        
+        // Add space to the attempt
+        function addSpace() {
+            if (selectedLetters.length > 0 && !selectedLetters[selectedLetters.length - 1].isSpace) {
+                selectedLetters.push({ letter: ' ', isSpace: true });
+                updateAttemptDisplay();
+                checkWordCompletion();
+            }
+        }
+        
+        // Delete last letter/space from attempt
+        function deleteLastLetter() {
+            if (selectedLetters.length > 0) {
+                const lastItem = selectedLetters.pop();
+                
+                if (!lastItem.isSpace) {
+                    // Show the letter again in the scrambled letters
+                    const letterElement = scrambledLetters.find(
+                        letter => letter.index === lastItem.index
+                    ).element;
+                    letterElement.classList.remove('hidden');
+                    letterElement.classList.add('visible');
+                }
+                
+                updateAttemptDisplay();
+                messageEl.textContent = '';
+            }
+        }
+        
+        // Update navigation buttons state
+        function updateNavigationButtons() {
+            prevBtnEl.disabled = currentWordIndex <= 0;
+            nextBtnEl.disabled = currentWordIndex >= vocabulary.length - 1;
+        }
+        
+        // Speak the current word
+        function speakCurrentWord() {
+            if (speechSynth.speaking) {
+                speechSynth.cancel();
+            }
+            
+            const utterance = new SpeechSynthesisUtterance(vocabulary[currentWordIndex].word);
+            utterance.rate = 0.9;
+            utterance.pitch = 1;
+            speechSynth.speak(utterance);
+        }
+        
+        // Show current word with flashing effect
+        function showCurrentWord() {
+            clearInterval(flashInterval);
+            
+            const vocabItem = vocabulary[currentWordIndex];
+            currentWord = vocabItem.word;
+            progressEl.textContent = `Word ${currentWordIndex + 1} of ${vocabulary.length}`;
+            
+            flashCount = 0;
+            flashcardEl.textContent = vocabItem.word;
+            translationEl.textContent = vocabItem.translation;
+            speakBtnEl.style.display = 'none';
+            scrambledContainerEl.style.display = 'none';
+            flashcardEl.style.display = 'block';
+            translationEl.style.display = 'block';
+            flashcardEl.style.visibility = 'visible';
+            translationEl.style.visibility = 'visible';
+            
+            // Update navigation buttons
+            updateNavigationButtons();
+            
+            // Initial pronunciation
+            speakCurrentWord();
+            
+            flashInterval = setInterval(() => {
+                flashCount++;
+                
+                // Toggle visibility for flashing effect
+                if (flashcardEl.style.visibility === 'hidden') {
+                    flashcardEl.style.visibility = 'visible';
+                    translationEl.style.visibility = 'visible';
+                    
+                    // Speak the word when it appears (every second flash)
+                    if (flashCount % 2 === 1) {
+                        speakCurrentWord();
+                    }
+                } else {
+                    flashcardEl.style.visibility = 'hidden';
+                    translationEl.style.visibility = 'hidden';
+                }
+                
+                // After total flashes, show scrambled letters
+                if (flashCount >= totalFlashes * 2) {
+                    clearInterval(flashInterval);
+                    flashcardEl.style.display = 'none';
+                    translationEl.style.display = 'none';
+                    speakBtnEl.style.display = 'block';
+                    showScrambledWord();
+                }
+            }, 1000); // Flash every 1000ms (500ms visible, 500ms hidden)
+        }
+
+        // Show scrambled word for user to unscramble
+        function showScrambledWord() {
+            scrambledContainerEl.style.display = 'block';
+            selectedLetters = [];
+            scrambledLetters = [];
+            attemptDisplayEl.textContent = '';
+            messageEl.textContent = '';
+            scrambledLettersEl.innerHTML = '';
+            
+            // Remove spaces and scramble the letters
+            const lettersOnly = currentWord.replace(/\s/g, '');
+            const scrambled = scrambleWord(lettersOnly);
+            
+            // Create letter elements
+            scrambled.split('').forEach((letter, index) => {
+                const letterEl = document.createElement('span');
+                letterEl.className = 'letter visible';
+                letterEl.textContent = letter;
+                letterEl.dataset.index = index;
+                letterEl.addEventListener('click', () => selectLetter(letterEl, index));
+                scrambledLettersEl.appendChild(letterEl);
+                
+                // Store reference to letter element
+                scrambledLetters.push({
+                    index: index,
+                    letter: letter,
+                    element: letterEl
+                });
+            });
+        }
+        
+        // Scramble a word (Fisher-Yates algorithm)
+        function scrambleWord(word) {
+            const letters = word.split('');
+            for (let i = letters.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [letters[i], letters[j]] = [letters[j], letters[i]];
+            }
+            return letters.join('');
+        }
+        
+        // Handle letter selection
+        function selectLetter(letterEl, index) {
+            // Hide the letter
+            letterEl.classList.remove('visible');
+            letterEl.classList.add('hidden');
+            
+            // Add to selected letters
+            selectedLetters.push({
+                index: index,
+                letter: letterEl.textContent,
+                isSpace: false
+            });
+            
+            // Update attempt display
+            updateAttemptDisplay();
+            
+            // Check if the word is complete
+            checkWordCompletion();
+        }
+        
+        // Update the attempt display
+        function updateAttemptDisplay() {
+            attemptDisplayEl.textContent = selectedLetters
+                .map(item => item.letter)
+                .join('');
+        }
+        
+        // Check if the selected letters form the correct word
+        function checkWordCompletion() {
+            const userAttempt = selectedLetters.map(item => item.letter).join('');
+            const targetWord = currentWord;
+            
+            if (userAttempt === targetWord) {
+                messageEl.textContent = 'Correct! Well done!';
+                messageEl.style.color = '#2ecc71';
+                
+                // Disable all letters
+                document.querySelectorAll('.letter').forEach(el => {
+                    el.style.pointerEvents = 'none';
+                });
+                
+                // Enable next button if not on last word
+                if (currentWordIndex < vocabulary.length - 1) {
+                    nextBtnEl.disabled = false;
+                }
+                
+                // Speak the word when correct
+                speakCurrentWord();
+            } else if (userAttempt.length === targetWord.length) {
+                // Only show incorrect if lengths match
+                messageEl.textContent = 'Incorrect. Try again!';
+                messageEl.style.color = '#e74c3c';
+            }
+        }
+        
+        // Move to the next word
+        function nextWord() {
+            if (currentWordIndex < vocabulary.length - 1) {
+                currentWordIndex++;
+                showCurrentWord();
+            }
+        }
+        
+        // Move to the previous word
+        function prevWord() {
+            if (currentWordIndex > 0) {
+                currentWordIndex--;
+                showCurrentWord();
+            }
+        }
+        
+        // Start the game
+        // Wait for voices to be loaded (especially needed for Chrome)
+        speechSynthesis.onvoiceschanged = function() {
+            if (speechSynthesis.getVoices().length > 0) {
+                init();
+            }
+        };
+        
+        // Fallback if voices don't load
+        setTimeout(init, 1000);
+    </script>
+</body>
+</html>
