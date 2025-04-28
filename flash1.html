@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sight Word Speller</title>
+<style>
+  body {
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    background: linear-gradient(to right, #fceabb, #f8b500);
+    padding: 1em;
+    text-align: center;
+    min-height: 100vh;
+  }
+  h1 {
+    color: #5a189a;
+  }
+  #wordDisplay {
+    font-size: 4em; /* Bigger flashed word */
+    margin: 1em 0;
+    height: 2em;
+    color: #2b9348;
+  }
+  #buttons {
+    margin: 1em 0;
+  }
+  .letterButton {
+    font-size: 2em;
+    margin: 0.3em;
+    padding: 0.5em 1em;
+    background-color: #48cae4;
+    border: none;
+    border-radius: 10px;
+    color: white;
+    box-shadow: 2px 2px 5px gray;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+  .letterButton:hover {
+    background-color: #0077b6;
+  }
+  #userInput {
+    margin-top: 1em;
+    font-size: 2em;
+    min-height: 1.5em;
+    color: #ef476f;
+  }
+  button {
+    padding: 0.7em 1.2em;
+    margin: 0.5em;
+    font-size: 1em;
+    background-color: #06d6a0;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    box-shadow: 2px 2px 5px gray;
+  }
+  button:hover {
+    background-color: #118ab2;
+  }
+</style>
+</head>
+<body>
+
+<h1>Sight Word Speller</h1>
+
+<div id="setSelection">
+  <p>Select a Set:</p>
+  <button onclick="startGame(0)">Set 1</button>
+  <button onclick="startGame(1)">Set 2</button>
+  <button onclick="startGame(2)">Set 3</button>
+</div>
+
+<div id="gameArea" style="display:none;">
+  <div id="wordDisplay"></div>
+  <div id="buttons"></div>
+  <div id="userInput"></div>
+  <br>
+  <button onclick="speakCurrentWord()">Say Word Again</button>
+  <button onclick="deleteLastLetter()">Delete Last Letter</button>
+  <br><br>
+  <button onclick="prevWord()">Previous</button>
+  <button onclick="nextWord()">Next</button>
+</div>
+
+<script>
+const sets = [
+  ["cat", "dog", "run", "big", "sun"],
+  ["red", "blue", "green", "yellow", "black"],
+  ["jump", "play", "look", "come", "make"]
+];
+
+let currentSet = [];
+let currentIndex = 0;
+let userSpelling = "";
+let speakingUtterance = null;
+
+function startGame(setIndex) {
+  currentSet = sets[setIndex];
+  currentIndex = 0;
+  document.getElementById('setSelection').style.display = 'none';
+  document.getElementById('gameArea').style.display = 'block';
+  showWord();
+}
+
+async function showWord() {
+  stopSpeaking();
+  clearButtons();
+  userSpelling = "";
+  document.getElementById('userInput').textContent = "";
+  const word = currentSet[currentIndex];
+  
+  await flashWord(word, 6);
+  scrambleLetters(word);
+}
+
+function flashWord(word, times) {
+  return new Promise((resolve) => {
+    let count = 0;
+    const display = document.getElementById('wordDisplay');
+
+    function flashOnce() {
+      if (count >= times) {
+        display.textContent = '';
+        resolve();
+        return;
+      }
+
+      display.textContent = word;
+      speakWord(word, () => {
+        display.textContent = '';
+        setTimeout(() => {
+          count++;
+          flashOnce();
+        }, 400);
+      });
+    }
+
+    flashOnce();
+  });
+}
+
+function speakWord(word, callback) {
+  if ('speechSynthesis' in window) {
+    stopSpeaking();
+    const utter = new SpeechSynthesisUtterance(word);
+    utter.lang = 'en-US';
+    utter.rate = 0.7;
+    utter.onend = callback;
+    speakingUtterance = utter;
+    window.speechSynthesis.speak(utter);
+  } else {
+    callback();
+  }
+}
+
+function speakCurrentWord() {
+  stopSpeaking();
+  const word = currentSet[currentIndex];
+  speakWord(word, () => {});
+}
+
+function stopSpeaking() {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    speakingUtterance = null;
+  }
+}
+
+function scrambleLetters(word) {
+  const letters = word.split('').sort(() => Math.random() - 0.5);
+  const buttonsDiv = document.getElementById('buttons');
+  buttonsDiv.innerHTML = '';
+  
+  letters.forEach(letter => {
+    const btn = document.createElement('button');
+    btn.textContent = letter;
+    btn.className = 'letterButton';
+    btn.onclick = (e) => addLetter(letter, e.target);
+    buttonsDiv.appendChild(btn);
+  });
+}
+
+function clearButtons() {
+  document.getElementById('buttons').innerHTML = '';
+}
+
+function addLetter(letter, buttonElement) {
+  userSpelling += letter;
+  document.getElementById('userInput').textContent = userSpelling;
+  
+  buttonElement.style.transform = "scale(0)";
+  buttonElement.style.opacity = "0";
+  setTimeout(() => buttonElement.remove(), 300);
+
+  checkWordCompletion();
+}
+
+function deleteLastLetter() {
+  if (userSpelling.length > 0) {
+    userSpelling = userSpelling.slice(0, -1);
+    document.getElementById('userInput').textContent = userSpelling;
+  }
+}
+
+function checkWordCompletion() {
+  if (userSpelling.length === currentSet[currentIndex].length) {
+    if (userSpelling === currentSet[currentIndex]) {
+      setTimeout(() => {
+        alert('Correct!');
+        nextWord();
+      }, 300);
+    } else {
+      setTimeout(() => {
+        alert('Try again!');
+        userSpelling = "";
+        document.getElementById('userInput').textContent = '';
+        showWord();
+      }, 300);
+    }
+  }
+}
+
+function nextWord() {
+  stopSpeaking();
+  clearButtons();
+  if (currentIndex < currentSet.length - 1) {
+    currentIndex++;
+    showWord();
+  } else {
+    alert("You've finished this set!");
+    document.getElementById('gameArea').style.display = 'none';
+    document.getElementById('setSelection').style.display = 'block';
+  }
+}
+
+function prevWord() {
+  stopSpeaking();
+  clearButtons();
+  if (currentIndex > 0) {
+    currentIndex--;
+    showWord();
+  }
+}
+</script>
+
+</body>
+</html>
