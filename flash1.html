@@ -6,7 +6,7 @@
 <title>Sight Word Speller</title>
 <style>
   body {
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: Arial, sans-serif;
     background: linear-gradient(to right, #fceabb, #f8b500);
     padding: 1em;
     text-align: center;
@@ -14,9 +14,10 @@
   }
   h1 {
     color: #5a189a;
+    font-size: 2.5em;
   }
   #wordDisplay {
-    font-size: 4em; /* Bigger flashed word */
+    font-size: 5em;
     margin: 1em 0;
     height: 2em;
     color: #2b9348;
@@ -25,9 +26,9 @@
     margin: 1em 0;
   }
   .letterButton {
-    font-size: 2em;
+    font-size: 2.2em;
     margin: 0.3em;
-    padding: 0.5em 1em;
+    padding: 0.6em 1.1em;
     background-color: #48cae4;
     border: none;
     border-radius: 10px;
@@ -40,14 +41,14 @@
   }
   #userInput {
     margin-top: 1em;
-    font-size: 2em;
+    font-size: 2.2em;
     min-height: 1.5em;
     color: #ef476f;
   }
   button {
-    padding: 0.7em 1.2em;
+    padding: 0.8em 1.3em;
     margin: 0.5em;
-    font-size: 1em;
+    font-size: 1.2em;
     background-color: #06d6a0;
     border: none;
     border-radius: 8px;
@@ -85,7 +86,7 @@
 <script>
 const sets = [
   ["ba", "na", "banana", "Mary", "James"],
-  ["red", "blue", "green", "yellow", "black"],
+  ["cat", "can", "cab", "bat", "bank"],
   ["jump", "play", "look", "come", "make"]
 ];
 
@@ -93,6 +94,7 @@ let currentSet = [];
 let currentIndex = 0;
 let userSpelling = "";
 let speakingUtterance = null;
+let activeButtons = [];
 
 function startGame(setIndex) {
   currentSet = sets[setIndex];
@@ -108,7 +110,7 @@ async function showWord() {
   userSpelling = "";
   document.getElementById('userInput').textContent = "";
   const word = currentSet[currentIndex];
-  
+
   await flashWord(word, 6);
   scrambleLetters(word);
 }
@@ -131,7 +133,7 @@ function flashWord(word, times) {
         setTimeout(() => {
           count++;
           flashOnce();
-        }, 400);
+        }, 600);
       });
     }
 
@@ -170,35 +172,48 @@ function scrambleLetters(word) {
   const letters = word.split('').sort(() => Math.random() - 0.5);
   const buttonsDiv = document.getElementById('buttons');
   buttonsDiv.innerHTML = '';
-  
+  activeButtons = [];
+
   letters.forEach(letter => {
     const btn = document.createElement('button');
     btn.textContent = letter;
     btn.className = 'letterButton';
     btn.onclick = (e) => addLetter(letter, e.target);
     buttonsDiv.appendChild(btn);
+    activeButtons.push(btn);
   });
 }
 
 function clearButtons() {
   document.getElementById('buttons').innerHTML = '';
+  activeButtons = [];
 }
 
 function addLetter(letter, buttonElement) {
   userSpelling += letter;
   document.getElementById('userInput').textContent = userSpelling;
-  
+
   buttonElement.style.transform = "scale(0)";
   buttonElement.style.opacity = "0";
-  setTimeout(() => buttonElement.remove(), 300);
+  buttonElement.disabled = true;
+  setTimeout(() => buttonElement.style.display = 'none', 300);
 
   checkWordCompletion();
 }
 
 function deleteLastLetter() {
   if (userSpelling.length > 0) {
+    const lastLetter = userSpelling.slice(-1);
     userSpelling = userSpelling.slice(0, -1);
     document.getElementById('userInput').textContent = userSpelling;
+
+    const reEnable = activeButtons.find(btn => btn.textContent === lastLetter && btn.style.display === 'none');
+    if (reEnable) {
+      reEnable.style.display = 'inline-block';
+      reEnable.style.transform = "scale(1)";
+      reEnable.style.opacity = "1";
+      reEnable.disabled = false;
+    }
   }
 }
 
