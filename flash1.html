@@ -8,27 +8,36 @@
   body {
     font-family: Arial, sans-serif;
     background: linear-gradient(to right, #fceabb, #f8b500);
-    padding: 1em;
+    padding: 0.5em;
     text-align: center;
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
   }
   h1 {
     color: #5a189a;
-    font-size: 2.5em;
+    font-size: 2em;
+    margin-bottom: 0.5em;
   }
   #wordDisplay {
-    font-size: 5em;
-    margin: 1em 0;
-    height: 2em;
+    font-size: 10vw;
+    margin: 0.5em 0;
+    height: 1.2em;
     color: #2b9348;
   }
   #buttons {
-    margin: 1em 0;
+    margin: 0.2em 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.3em;
   }
   .letterButton {
-    font-size: 2.2em;
-    margin: 0.3em;
-    padding: 0.6em 1.1em;
+    font-size: 1.8em;
+    margin: 0.2em;
+    padding: 0.4em 0.8em;
     background-color: #48cae4;
     border: none;
     border-radius: 10px;
@@ -40,15 +49,15 @@
     background-color: #0077b6;
   }
   #userInput {
-    margin-top: 1em;
+    margin-top: 0.3em;
     font-size: 2.2em;
-    min-height: 1.5em;
+    min-height: 1.2em;
     color: #ef476f;
   }
   button {
-    padding: 0.8em 1.3em;
-    margin: 0.5em;
-    font-size: 1.2em;
+    padding: 0.6em 1em;
+    margin: 0.2em;
+    font-size: 1em;
     background-color: #06d6a0;
     border: none;
     border-radius: 8px;
@@ -57,6 +66,15 @@
   }
   button:hover {
     background-color: #118ab2;
+  }
+  #feedbackGraphic {
+    margin-top: 0.3em;
+    font-size: 2.5em;
+  }
+  #completionGraphic {
+    margin-top: 1em;
+    font-size: 3em;
+    color: green;
   }
 </style>
 </head>
@@ -75,186 +93,158 @@
   <div id="wordDisplay"></div>
   <div id="buttons"></div>
   <div id="userInput"></div>
+  <div id="feedbackGraphic"></div>
   <br>
   <button onclick="speakCurrentWord()">Say Word Again</button>
   <button onclick="deleteLastLetter()">Delete Last Letter</button>
-  <br><br>
+  <br>
   <button onclick="prevWord()">Previous</button>
   <button onclick="nextWord()">Next</button>
 </div>
 
+<div id="completionGraphic" style="display:none;">🎉 Set Complete! 🎉</div>
+
 <script>
-const sets = [
-  ["ba", "nana", "banana", "Mary", "James"],
-  ["cat", "car", "cats", "dad", "Dad"],
-  ["bad", "Dan", "nana", "bed", "big"]
+const wordSets = [
+  ["the", "and", "you", "was", "are"],
+  ["said", "come", "here", "look", "make"],
+  ["play", "jump", "help", "blue", "down"]
 ];
 
 let currentSet = [];
 let currentIndex = 0;
 let userSpelling = "";
-let speakingUtterance = null;
-let activeButtons = [];
+let currentWord = "";
+let speakTimeouts = [];
 
 function startGame(setIndex) {
-  currentSet = sets[setIndex];
+  currentSet = wordSets[setIndex];
   currentIndex = 0;
-  document.getElementById('setSelection').style.display = 'none';
-  document.getElementById('gameArea').style.display = 'block';
+  document.getElementById("setSelection").style.display = "none";
+  document.getElementById("gameArea").style.display = "block";
+  document.getElementById("completionGraphic").style.display = "none";
   showWord();
 }
 
-async function showWord() {
-  stopSpeaking();
-  clearButtons();
+function showWord() {
+  clearTimeouts();
   userSpelling = "";
-  document.getElementById('userInput').textContent = "";
-  const word = currentSet[currentIndex];
+  document.getElementById("userInput").textContent = "";
+  document.getElementById("feedbackGraphic").textContent = "";
+  currentWord = currentSet[currentIndex];
 
-  await flashWord(word, 6);
-  scrambleLetters(word);
-}
+  let display = document.getElementById("wordDisplay");
+  display.textContent = "";
 
-function flashWord(word, times) {
-  return new Promise((resolve) => {
-    let count = 0;
-    const display = document.getElementById('wordDisplay');
-
-    function flashOnce() {
-      if (count >= times) {
-        display.textContent = '';
-        resolve();
-        return;
-      }
-
-      display.textContent = word;
-      speakWord(word, () => {
-        display.textContent = '';
-        setTimeout(() => {
-          count++;
-          flashOnce();
-        }, 600);
-      });
+  let i = 0;
+  function flashAndSpeak() {
+    if (i < 6) {
+      display.textContent = currentWord;
+      speak(currentWord);
+      speakTimeouts.push(setTimeout(() => {
+        display.textContent = "";
+        speakTimeouts.push(setTimeout(() => {
+          i++;
+          flashAndSpeak();
+        }, 400));
+      }, 600));
+    } else {
+      display.textContent = "";
+      showLetters();
     }
-
-    flashOnce();
-  });
-}
-
-function speakWord(word, callback) {
-  if ('speechSynthesis' in window) {
-    stopSpeaking();
-    const utter = new SpeechSynthesisUtterance(word);
-    utter.lang = 'en-US';
-    utter.rate = 0.7;
-    utter.onend = callback;
-    speakingUtterance = utter;
-    window.speechSynthesis.speak(utter);
-  } else {
-    callback();
   }
+  flashAndSpeak();
 }
 
-function speakCurrentWord() {
-  stopSpeaking();
-  const word = currentSet[currentIndex];
-  speakWord(word, () => {});
+function speak(text) {
+  const utterance = new SpeechSynthesisUtterance(text);
+  speechSynthesis.speak(utterance);
 }
 
-function stopSpeaking() {
-  if ('speechSynthesis' in window) {
-    window.speechSynthesis.cancel();
-    speakingUtterance = null;
-  }
+function clearTimeouts() {
+  speakTimeouts.forEach(clearTimeout);
+  speakTimeouts = [];
+  speechSynthesis.cancel();
 }
 
-function scrambleLetters(word) {
-  const letters = word.split('').sort(() => Math.random() - 0.5);
-  const buttonsDiv = document.getElementById('buttons');
-  buttonsDiv.innerHTML = '';
-  activeButtons = [];
-
+function showLetters() {
+  const buttons = document.getElementById("buttons");
+  buttons.innerHTML = "";
+  const letters = shuffle(currentWord.split(""));
   letters.forEach(letter => {
-    const btn = document.createElement('button');
+    const btn = document.createElement("button");
     btn.textContent = letter;
-    btn.className = 'letterButton';
-    btn.onclick = (e) => addLetter(letter, e.target);
-    buttonsDiv.appendChild(btn);
-    activeButtons.push(btn);
+    btn.className = "letterButton";
+    btn.onclick = () => handleLetter(letter, btn);
+    buttons.appendChild(btn);
   });
 }
 
-function clearButtons() {
-  document.getElementById('buttons').innerHTML = '';
-  activeButtons = [];
-}
-
-function addLetter(letter, buttonElement) {
+function handleLetter(letter, btn) {
   userSpelling += letter;
-  document.getElementById('userInput').textContent = userSpelling;
+  document.getElementById("userInput").textContent = userSpelling;
+  btn.style.opacity = 0;
+  btn.disabled = true;
 
-  buttonElement.style.transform = "scale(0)";
-  buttonElement.style.opacity = "0";
-  buttonElement.disabled = true;
-  setTimeout(() => buttonElement.style.display = 'none', 300);
-
-  checkWordCompletion();
+  if (userSpelling === currentWord) {
+    document.getElementById("feedbackGraphic").textContent = "✅";
+    setTimeout(() => {
+      currentIndex++;
+      if (currentIndex >= currentSet.length) {
+        document.getElementById("gameArea").style.display = "none";
+        document.getElementById("completionGraphic").style.display = "block";
+        document.getElementById("setSelection").style.display = "block";
+      } else {
+        showWord();
+      }
+    }, 1000);
+  }
 }
 
 function deleteLastLetter() {
   if (userSpelling.length > 0) {
-    const lastLetter = userSpelling.slice(-1);
+    const letter = userSpelling.slice(-1);
     userSpelling = userSpelling.slice(0, -1);
-    document.getElementById('userInput').textContent = userSpelling;
-
-    const reEnable = activeButtons.find(btn => btn.textContent === lastLetter && btn.style.display === 'none');
-    if (reEnable) {
-      reEnable.style.display = 'inline-block';
-      reEnable.style.transform = "scale(1)";
-      reEnable.style.opacity = "1";
-      reEnable.disabled = false;
+    document.getElementById("userInput").textContent = userSpelling;
+    const buttons = document.querySelectorAll(".letterButton");
+    for (const btn of buttons) {
+      if (btn.textContent === letter && btn.disabled) {
+        btn.disabled = false;
+        btn.style.opacity = 1;
+        break;
+      }
     }
   }
 }
 
-function checkWordCompletion() {
-  if (userSpelling.length === currentSet[currentIndex].length) {
-    if (userSpelling === currentSet[currentIndex]) {
-      setTimeout(() => {
-        alert('Correct!');
-        nextWord();
-      }, 300);
-    } else {
-      setTimeout(() => {
-        alert('Try again!');
-        userSpelling = "";
-        document.getElementById('userInput').textContent = '';
-        showWord();
-      }, 300);
-    }
-  }
-}
-
-function nextWord() {
-  stopSpeaking();
-  clearButtons();
-  if (currentIndex < currentSet.length - 1) {
-    currentIndex++;
-    showWord();
-  } else {
-    alert("You've finished this set!");
-    document.getElementById('gameArea').style.display = 'none';
-    document.getElementById('setSelection').style.display = 'block';
-  }
+function speakCurrentWord() {
+  speak(currentWord);
 }
 
 function prevWord() {
-  stopSpeaking();
-  clearButtons();
+  clearTimeouts();
   if (currentIndex > 0) {
     currentIndex--;
     showWord();
   }
+}
+
+function nextWord() {
+  clearTimeouts();
+  if (currentIndex < currentSet.length - 1) {
+    currentIndex++;
+    showWord();
+  }
+}
+
+function shuffle(array) {
+  let currentIndex = array.length, randomIndex;
+  while (currentIndex !== 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+    [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+  }
+  return array;
 }
 </script>
 
