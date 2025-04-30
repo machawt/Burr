@@ -105,10 +105,13 @@
 <div id="completionGraphic" style="display:none;">🎉 Set Complete! 🎉</div>
 
 <script>
+speechSynthesis.onvoiceschanged = () => {
+  speechSynthesis.getVoices();
+};
 const wordSets = [
-  ["the", "and", "you", "was", "are"],
-  ["said", "come", "here", "look", "make"],
-  ["play", "jump", "help", "blue", "down"]
+  ["nana", "banana", "Mary", "James", "Dad"],
+  ["and", "can", "face", "Dan", "bad"],
+  ["bean", "tail", "emu", "egg", "dean"]
 ];
 
 let currentSet = [];
@@ -140,14 +143,18 @@ function showWord() {
   function flashAndSpeak() {
     if (i < 6) {
       display.textContent = currentWord;
-      speak(currentWord);
+      const utterance = new SpeechSynthesisUtterance(currentWord);
+      const voices = speechSynthesis.getVoices();
+      const ausVoice = voices.find(v => v.lang === "en-AU") || voices.find(v => v.lang.startsWith("en"));
+      if (ausVoice) utterance.voice = ausVoice;
+      speechSynthesis.speak(utterance);
       speakTimeouts.push(setTimeout(() => {
         display.textContent = "";
         speakTimeouts.push(setTimeout(() => {
           i++;
           flashAndSpeak();
-        }, 400));
-      }, 600));
+        }, 1200));
+      }, 1200));
     } else {
       display.textContent = "";
       showLetters();
@@ -158,6 +165,9 @@ function showWord() {
 
 function speak(text) {
   const utterance = new SpeechSynthesisUtterance(text);
+  const voices = speechSynthesis.getVoices();
+  const ausVoice = voices.find(v => v.lang === "en-AU") || voices.find(v => v.lang.startsWith("en"));
+  if (ausVoice) utterance.voice = ausVoice;
   speechSynthesis.speak(utterance);
 }
 
