@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Letter Match Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 1rem;
+      margin: 0;
+      background-color: #f4f4f4;
+    }
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
+    #score {
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+    .button {
+      font-size: 1.5rem;
+      margin: 0.3rem;
+      padding: 0.7rem 1rem;
+      cursor: pointer;
+      border: 2px solid #333;
+      border-radius: 0.5rem;
+      background-color: white;
+      flex: 1 0 18%;
+      max-width: 18%;
+    }
+    #lowercase-container {
+      margin-bottom: 1rem;
+    }
+    #uppercase-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    #feedback {
+      font-size: 1.2rem;
+      height: 2rem;
+      margin-top: 1rem;
+    }
+    @media (max-width: 600px) {
+      .button {
+        flex: 1 0 22%;
+        max-width: 22%;
+        font-size: 1.3rem;
+      }
+    }
+    @media (max-width: 400px) {
+      .button {
+        flex: 1 0 28%;
+        max-width: 28%;
+        font-size: 1.1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Match the Uppercase Letter</h1>
+  <div id="score">✅ Correct: 0 | ❌ Errors: 0</div>
+  <div id="lowercase-container"></div>
+  <div id="uppercase-container"></div>
+  <div id="feedback"></div>
+
+  <script>
+    const lowercaseContainer = document.getElementById('lowercase-container');
+    const uppercaseContainer = document.getElementById('uppercase-container');
+    const feedback = document.getElementById('feedback');
+    const scoreDisplay = document.getElementById('score');
+
+    let currentLetter = null;
+    let correctCount = 0;
+    let errorCount = 0;
+
+    function getRandomLetter() {
+      const letters = 'abcdefghijklmnopqrstuvwxyz';
+      return letters[Math.floor(Math.random() * letters.length)];
+    }
+
+    function showLowercase() {
+      lowercaseContainer.innerHTML = '';
+      const letter = getRandomLetter();
+      currentLetter = letter.toUpperCase();
+
+      const btn = document.createElement('button');
+      btn.textContent = letter;
+      btn.className = 'button';
+      btn.onclick = () => {
+        feedback.textContent = 'Now select the correct uppercase letter!';
+      };
+      lowercaseContainer.appendChild(btn);
+    }
+
+    function createUppercaseButtons() {
+      const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      uppercaseContainer.innerHTML = '';
+      for (let letter of alphabet) {
+        const btn = document.createElement('button');
+        btn.textContent = letter;
+        btn.className = 'button';
+        btn.onclick = () => checkAnswer(letter);
+        uppercaseContainer.appendChild(btn);
+      }
+    }
+
+    function checkAnswer(letter) {
+      if (!currentLetter) {
+        feedback.textContent = 'Click a lowercase letter first!';
+        return;
+      }
+
+      if (letter === currentLetter) {
+        feedback.textContent = '✅ Correct!';
+        correctCount++;
+        updateScore();
+        setTimeout(() => {
+          showLowercase();
+          feedback.textContent = '';
+        }, 1000);
+      } else {
+        feedback.textContent = '❌ Try Again!';
+        errorCount++;
+        updateScore();
+      }
+    }
+
+    function updateScore() {
+      scoreDisplay.textContent = `✅ Correct: ${correctCount} | ❌ Errors: ${errorCount}`;
+    }
+
+    // Initialize game
+    showLowercase();
+    createUppercaseButtons();
+  </script>
+
+</body>
+</html>
