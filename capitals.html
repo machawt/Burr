@@ -33,6 +33,12 @@
       background-color: white;
       flex: 1 0 18%;
       max-width: 18%;
+      transition: background-color 0.3s;
+    }
+    .matched {
+      background-color: #90ee90 !important; /* light green */
+      border-color: green;
+      color: black;
     }
     #lowercase-container {
       margin-bottom: 1rem;
@@ -83,6 +89,7 @@
     let currentLetter = null;
     let correctCount = 0;
     let errorCount = 0;
+    const matchedLetters = new Set();
 
     function getRandomLetter() {
       const letters = 'abcdefghijklmnopqrstuvwxyz';
@@ -110,12 +117,15 @@
         const btn = document.createElement('button');
         btn.textContent = letter;
         btn.className = 'button';
-        btn.onclick = () => checkAnswer(letter);
+        if (matchedLetters.has(letter)) {
+          btn.classList.add('matched');
+        }
+        btn.onclick = () => checkAnswer(letter, btn);
         uppercaseContainer.appendChild(btn);
       }
     }
 
-    function checkAnswer(letter) {
+    function checkAnswer(letter, buttonElement) {
       if (!currentLetter) {
         feedback.textContent = 'Click a lowercase letter first!';
         return;
@@ -124,7 +134,9 @@
       if (letter === currentLetter) {
         feedback.textContent = '✅ Correct!';
         correctCount++;
+        matchedLetters.add(letter);
         updateScore();
+        createUppercaseButtons(); // Refresh to apply green
         setTimeout(() => {
           showLowercase();
           feedback.textContent = '';
