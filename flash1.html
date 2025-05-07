@@ -89,6 +89,10 @@
   <button onclick="startGame(2)">Set 3</button>
   <button onclick="startGame(3)">Set 4</button>
   <button onclick="startGame(4)">Set 5</button>
+  <button onclick="startGame(5)">Set 6</button>
+  <button onclick="startGame(6)">Set 7</button>
+  <button onclick="startGame(7)">Set 8</button>
+  <button onclick="startGame(8)">Set 9</button>
 </div>
 
 <div id="gameArea" style="display:none;">
@@ -111,12 +115,16 @@ speechSynthesis.onvoiceschanged = () => {
   speechSynthesis.getVoices();
 };
 const wordSets = [
-  ["nana", "banana", "Mary", "James", "Dad"],
-  ["and", "can", "face", "Dan", "bad","car"],
-  ["bus", "egg", "dean", "God", "cat"],
-  ["bag", "big", "dig", "hand", "hide","beg"],
-  ["bus", "mad", "pig", "egg", "dean"],
-  ["emu","leg", "Olivia", "Emily", "Bogdan"]
+["Mary", "James", "Olivia", "Emily", "Mark", "Bogdin", "Darwin"],
+ ["banana", "nana", "Dan", "dad", "bad"],
+ ["bed", "and", "can", "face", "egg", "age", "cage", "fan"],
+ ["bag", "beg", "hide", "hand", "big", "dig", "Jesus", "hen", "bin"],
+["jam", "man", "kid", "mad", "leg", "flag", "black", "ham"],
+["nap", "pen", "cod", "dog", "God", "mob", "map", "mop", "rag", "crab", "pig", "car", "ran"],
+["sad", "sin", "sand", "sis", "ten", "tent", "tin", "cat", "cats", "hat", "mat", "net"],
+ ["quit", "quick", "up", "cup", "fun", "hug", "mud", "run", "dust", "bus"],
+ ["Viv", "David", "wet", "web", "wife", "van", "vet", "Darwin", "Engawala", "Urupunga"],
+ ["mix", "tax", "taxi", "fix", "yam", "yes", "zip", "zoo", "quiz", "yarn"]  
 ];
 
 let currentSet = [];
