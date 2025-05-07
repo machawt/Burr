@@ -87,6 +87,8 @@
   <button onclick="startGame(0)">Set 1</button>
   <button onclick="startGame(1)">Set 2</button>
   <button onclick="startGame(2)">Set 3</button>
+  <button onclick="startGame(3)">Set 4</button>
+  <button onclick="startGame(4)">Set 5</button>
 </div>
 
 <div id="gameArea" style="display:none;">
@@ -110,11 +112,11 @@ speechSynthesis.onvoiceschanged = () => {
 };
 const wordSets = [
   ["nana", "banana", "Mary", "James", "Dad"],
-  ["and", "can", "face", "Dan", "bad" "car"],
+  ["and", "can", "face", "Dan", "bad","car"],
   ["bus", "egg", "dean", "God", "cat"],
   ["bag", "big", "dig", "hand", "hide","beg"],
   ["bus", "mad", "pig", "egg", "dean"],
-   ["emu","leg", "Olivia", "Emily", "Bogdan"]
+  ["emu","leg", "Olivia", "Emily", "Bogdan"]
 ];
 
 let currentSet = [];
