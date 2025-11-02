@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galactic Strands (Clues)</title>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
+
+        :root {
+            --color-dark: #0f0f23;
+            --color-light: #e0e0e0;
+            --color-accent: #ffcc00; /* Gold */
+            --color-found: #4CAF50; /* Green */
+            --color-selected: #0077c2; /* Blue */
+            --color-next-word: #ff6347; /* Tomato Red for next target */
+            --color-bg-found: #0f1c0f;
+            --color-bg-default: #1a1a3a;
+            --color-text-default: #f0f0f0;
+            --grid-size: 8;
+        }
+
+        body {
+            font-family: 'Roboto Mono', monospace;
+            background-color: var(--color-dark);
+            color: var(--color-text-default);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: var(--color-accent);
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+            margin-bottom: 5px;
+        }
+
+        .puzzle-area {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .puzzle-area {
+                flex-direction: row;
+                align-items: flex-start;
+            }
+        }
+
+        /* --- Game Grid --- */
+        #game-grid {
+            display: grid;
+            grid-template-columns: repeat(var(--grid-size), 1fr);
+            grid-template-rows: repeat(var(--grid-size), 1fr);
+            background-color: var(--color-bg-default);
+            border: 5px solid var(--color-accent);
+            box-shadow: 0 0 20px rgba(0, 119, 194, 0.7);
+            border-radius: 12px;
+            overflow: hidden;
+            flex-grow: 1;
+            aspect-ratio: 1 / 1; /* Keep the grid square */
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .cell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: clamp(1rem, 4vw, 2rem);
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background-color 0.15s ease, color 0.15s ease, transform 0.05s ease;
+            user-select: none;
+            border: 1px solid rgba(255, 255, 255, 0.05); /* Subtle grid lines */
+        }
+
+        .cell:hover:not(.selected):not(.found) {
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: scale(1.03);
+        }
+
+        .cell.selected {
+            background-color: var(--color-selected);
+            color: var(--color-dark);
+            box-shadow: 0 0 8px rgba(0, 119, 194, 0.9);
+            transform: scale(1.05);
+        }
+
+        .cell.found {
+            background-color: var(--color-bg-found);
+            color: var(--color-found);
+            pointer-events: none; /* Found cells are no longer clickable */
+        }
+
+        /* --- Sidebar / Word List --- */
+        .sidebar {
+            background-color: var(--color-bg-default);
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid var(--color-accent);
+            box-shadow: 0 0 15px rgba(255, 204, 0, 0.3);
+            width: 100%;
+            max-width: 300px;
+            min-width: 200px;
+            margin: 0 auto;
+        }
+
+        @media (min-width: 768px) {
+            .sidebar {
+                margin: 0;
+            }
+        }
+
+        .sidebar h2 {
+            margin-top: 0;
+            font-size: 1.5rem;
+            color: var(--color-accent);
+            border-bottom: 2px solid var(--color-accent);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        
+        #puzzle-theme {
+            font-size: 1.1rem; 
+            color: #aaa; 
+            margin-bottom: 5px;
+        }
+
+        #word-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column; /* Changed to column for better clue flow */
+            gap: 12px; /* Increased gap for multi-line clues */
+        }
+
+        #word-list li {
+            font-weight: 400;
+            color: var(--color-text-default);
+            opacity: 0.8;
+            transition: opacity 0.5s ease, text-decoration 0.5s ease, color 0.2s ease, font-weight 0.2s ease;
+            padding: 4px 0;
+            font-size: 1rem;
+        }
+        
+        #word-list li span.word-reveal {
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--color-found);
+        }
+
+        /* Found words */
+        #word-list li.found {
+            opacity: 1;
+            text-decoration: line-through 2px var(--color-found);
+            color: var(--color-text-default); /* Keep the clue white, but word is green */
+            font-weight: 400;
+        }
+
+        /* Next required word */
+        #word-list li.next-word {
+            opacity: 1;
+            color: var(--color-next-word);
+            font-weight: 700;
+            background-color: rgba(255, 99, 71, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            transform: scale(1.02);
+            animation: pulse-next 1.5s infinite alternate;
+        }
+
+        @keyframes pulse-next {
+            from { box-shadow: 0 0 5px rgba(255, 99, 71, 0.7); }
+            to { box-shadow: 0 0 10px rgba(255, 99, 71, 0.9); }
+        }
+
+        /* --- Status & Control --- */
+        #status-message {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 700;
+            min-height: 1.2rem;
+            margin: 10px 0;
+            color: var(--color-light);
+        }
+        
+        #current-word {
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            min-height: 1.8rem;
+            margin: 10px 0;
+            color: var(--color-selected);
+            letter-spacing: 5px;
+            text-transform: uppercase;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        button {
+            background-color: var(--color-accent);
+            color: var(--color-dark);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px var(--color-dark);
+            flex: 1;
+            max-width: 120px;
+        }
+
+        button:hover {
+            background-color: #ffd700;
+        }
+
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px var(--color-dark);
+        }
+
+        /* Specific style for Submit button */
+        #submit-button {
+            background-color: var(--color-selected);
+            color: white;
+        }
+        #submit-button:hover {
+            background-color: #0099e6;
+        }
+        #submit-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 4px var(--color-dark);
+        }
+
+
+        .completed-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 15, 35, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .completed-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .completed-content {
+            background: var(--color-dark);
+            border: 5px solid var(--color-found);
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 0 30px var(--color-found);
+            animation: pulse 1.5s infinite alternate;
+        }
+
+        .completed-content h2 {
+            font-size: 3rem;
+            color: var(--color-found);
+            margin-bottom: 20px;
+        }
+        
+        /* Final Completion Overlay Style */
+        #final-completed-overlay .completed-content {
+            border-color: var(--color-accent);
+            box-shadow: 0 0 30px var(--color-accent);
+        }
+
+        @keyframes pulse {
+            from { box-shadow: 0 0 30px var(--color-found); }
+            to { box-shadow: 0 0 45px var(--color-found); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header class="header">
+            <h1>Burarra Strands</h1>
+        </header>
+
+        <div class="puzzle-area">
+            <!-- Sidebar for Word List and Status -->
+            <div class="sidebar">
+                <p id="puzzle-theme">Theme: Loading...</p>
+                <h2>Clues</h2>
+                <ul id="word-list">
+                    <!-- Clues will be populated here -->
+                </ul>
+                <div style="margin-top: 20px;">
+                    <div id="status-message">Select the first letter!</div>
+                    <div id="current-word"></div>
+                </div>
+                <div class="controls">
+                    <button id="reset-button"><i class="fas fa-redo"></i> New</button>
+                    <button id="submit-button" disabled>Submit</button>
+                    <button id="clear-button" disabled>Deselect</button>
+                </div>
+            </div>
+
+            <!-- Main Game Grid -->
+            <div id="game-grid">
+                <!-- Cells will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Level Completed Overlay -->
+    <div id="completed-overlay" class="completed-overlay">
+        <div class="completed-content">
+            <h2>Level Complete! <span id="level-display"></span></h2>
+            <p style="font-size: 1.2rem;">All words found!</p>
+            <p>Ready for the next challenge?</p>
+            <button onclick="startNextPuzzle()">Next Puzzle</button>
+        </div>
+    </div>
+
+    <!-- Final Game Completed Overlay -->
+    <div id="final-completed-overlay" class="completed-overlay">
+        <div class="completed-content">
+            <h2>All Puzzles Solved! 🎉</h2>
+            <p style="font-size: 1.2rem; color: var(--color-accent);">You are a master of the Burarra Strands!</p>
+            <p>Challenge completed. Play again?</p>
+            <button onclick="startGame(true)">Restart Game</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Core Game Data ---
+        const GRID_SIZE = 8;
+        const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const MIN_WORD_LENGTH = 2; 
+        
+        // This is the array where you define all your puzzles (levels) with clues.
+        const ALL_PUZZLES = [
+            {
+                theme: "Celestial Objects",
+                wordData: [
+                    // The order here is the required order of discovery.
+                    { word: "ANA-", clue: "In or At or With", path: [[7, 0], [6, 0], [5, 0], [4, 0]], found: false },
+                    { word: "MUNYA", clue: "dark", path: [[5, 2], [6, 3], [7, 4], [7, 3], [6, 2]], found: false },
+                    { word: "RAN.GU", clue: "moon", path: [[0, 7], [1, 7], [2, 7], [3, 7], [4, 7], [5, 7]], found: false },
+                    { word: "A-YURRA", clue: "he sleeps", path: [[0, 3], [1, 4], [2, 5], [3, 5], [4, 5],[5,5],[6,5]], found: false },
+                    { word: "GATA", clue: "Stars", path: [[0, 0], [0, 1], [1, 1], [2, 1]], found: false },
+                    { word: "JINY-", clue: "She", path: [[7, 7], [6, 7], [6, 6], [5, 6], [4, 6]], found: false },
+                    { word: "JIRRA", clue: "are", path: [[3, 6], [2, 6], [1, 6], [0, 6],[0,5]], found: false },
+
+                    { word: "RREYMA", clue: "New Moon", path: [[4, 3], [4, 2], [4, 1], [5, 1],[6,1],[7,2]],found: false },
+
+
+
+                ]
+            },
+            {
+                theme: "Animals",
+                wordData: [
+                    { word: "GALGU", clue: "Flying Fox", path: [[7, 7], [7, 6], [6, 5], [5, 5], [4, 5]], found: false },
+                    { word: "A-BOYA", clue: "he goes", path: [[7, 1], [6, 1], [5, 1], [4, 1], [3, 1],[2,1]], found: false },
+                    { word: "WAYKIN", clue: "Above", path: [[0, 7], [1, 6], [2, 5], [3, 4], [4, 3], [5, 2]], found: false },
+                    { word: "MUN-", clue: "It", path: [[0, 0], [0, 1], [0, 2], [0, 3]], found: false },
+ { word: "KNOKKNOK-", clue: "owl", path: [[6, 7], [5, 6], [4, 5], [3, 4],[3,3],[2,2],[2,3],[2,4]], found: false },
+ { word: "A-NIRRA", clue: "it sits", path: [[1, 2], [1, 3], [1, 4], [1, 5],[2,6],[2,7]], found: false },
+                ]
+            }
+            // Add your custom puzzles here! Be sure to include a 'clue' for each word.
+        ];
+
+        let currentPuzzleIndex = 0; 
+        let nextWordIndex = 0;      
+        let currentPuzzle = {}; 
+        let wordData = []; 
+        let currentSelection = []; 
+        let board = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(null));
+
+
+        // --- Utility Functions ---
+
+        /** Generates a random uppercase letter. */
+        const getRandomLetter = () => LETTERS[Math.floor(Math.random() * LETTERS.length)];
+
+        /**
+         * Checks if the second coordinate is adjacent (horizontally, vertically, or diagonally)
+         * to the first coordinate.
+         */
+        const isAdjacent = (r1, c1, r2, c2) => {
+            const dr = Math.abs(r1 - r2);
+            const dc = Math.abs(c1 - c2);
+            return (dr <= 1 && dc <= 1) && (dr !== 0 || dc !== 0);
+        };
+
+        // --- Game Setup ---
+
+        /** Initializes the game board with words and filler letters for the current puzzle. */
+        const initializeBoard = () => {
+            currentPuzzle = ALL_PUZZLES[currentPuzzleIndex];
+            // Create a deep copy of the word data so we can update 'found' status
+            wordData = JSON.parse(JSON.stringify(currentPuzzle.wordData)); 
+            
+            board = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(null));
+
+            // Place words on the board
+            wordData.forEach(wordObj => {
+                wordObj.path.forEach(([r, c], index) => {
+                    const letter = wordObj.word[index];
+                    if (r < GRID_SIZE && c < GRID_SIZE) {
+                         board[r][c] = {
+                            letter: letter,
+                            word: wordObj.word
+                        };
+                    } else {
+                        console.error(`Error: Word '${wordObj.word}' path out of bounds at [${r}, ${c}]`);
+                    }
+                });
+            });
+
+            // Fill empty cells with random letters
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    if (board[r][c] === null) {
+                        board[r][c] = {
+                            letter: getRandomLetter(),
+                            word: null
+                        };
+                    }
+                }
+            }
+        };
+
+        /** Renders the game grid and attaches event listeners. */
+        const renderGrid = () => {
+            const gridContainer = document.getElementById('game-grid');
+            gridContainer.innerHTML = '';
+            
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.id = `${r}-${c}`;
+                    cell.textContent = board[r][c].letter;
+                    cell.dataset.r = r;
+                    cell.dataset.c = c;
+                    cell.addEventListener('click', handleCellClick);
+                    gridContainer.appendChild(cell);
+                }
+            }
+        };
+
+        /** Renders the list of words (clues) to find in the sidebar, highlighting the next required word. */
+        const renderWordList = () => {
+            document.getElementById('puzzle-theme').textContent = `Theme: ${currentPuzzle.theme}`;
+            
+            const listContainer = document.getElementById('word-list');
+            listContainer.innerHTML = '';
+            wordData.forEach((wordObj, index) => {
+                const li = document.createElement('li');
+                
+                if (wordObj.found) {
+                    // Once found, show the clue and the word (in green parentheses)
+                    li.innerHTML = `${wordObj.clue} (<span class="word-reveal">${wordObj.word}</span>)`;
+                    li.classList.add('found');
+                } else {
+                    // Display the clue initially
+                    li.textContent = wordObj.clue; 
+                    
+                    if (index === nextWordIndex) {
+                        // Highlight the next required word
+                        li.classList.add('next-word');
+                    }
+                }
+                
+                li.id = `word-${wordObj.word}`;
+                listContainer.appendChild(li);
+            });
+        };
+        
+        // --- Game Logic ---
+
+        /** Updates the status message and the current selected word display. */
+        const updateDisplay = (message = '', currentWord = '') => {
+            document.getElementById('status-message').textContent = message;
+            document.getElementById('current-word').textContent = currentWord;
+            
+            // Manage button states
+            const selectionLength = currentSelection.length;
+            document.getElementById('clear-button').disabled = selectionLength === 0;
+            document.getElementById('submit-button').disabled = selectionLength < MIN_WORD_LENGTH;
+        };
+
+        /** Checks the current selection against the list of target words in order. */
+        const checkSelection = () => {
+            const selectedWord = currentSelection.map(s => s.letter).join('');
+
+            if (currentSelection.length < MIN_WORD_LENGTH) {
+                updateDisplay(`Word must be at least ${MIN_WORD_LENGTH} letters long.`, selectedWord);
+                return;
+            }
+            
+            if (nextWordIndex >= wordData.length) {
+                updateDisplay("Puzzle already complete!");
+                return;
+            }
+
+            const expectedWord = wordData[nextWordIndex].word;
+            
+            if (selectedWord === expectedWord) {
+                // Correct word found!
+                
+                const foundWordObj = wordData[nextWordIndex]; 
+                foundWordObj.found = true;
+                
+                // 1. Highlight the cells as found
+                currentSelection.forEach(s => {
+                    document.getElementById(s.id).classList.add('found');
+                    document.getElementById(s.id).classList.remove('selected');
+                });
+                
+                // 2. Increment the index for the next required word
+                nextWordIndex++; 
+                
+                // 3. Clear selection and update status
+                currentSelection = [];
+                updateDisplay(`Correct! Found the word for: "${foundWordObj.clue}"!`);
+
+                // 4. Update the word list display (to reveal the word and update the next clue highlight)
+                renderWordList();
+                
+                // 5. Check for level completion
+                if (nextWordIndex >= wordData.length) {
+                    // All words in the current puzzle are found
+                    if (currentPuzzleIndex < ALL_PUZZLES.length - 1) {
+                        showCompletionOverlay();
+                    } else {
+                        showFinalCompletionOverlay();
+                    }
+                }
+            } else {
+                // Incorrect word or out of order
+                updateDisplay(`Incorrect. You must find the word for "${wordData[nextWordIndex].clue}" next.`);
+                // Reset selection after a short delay
+                setTimeout(resetSelection, 750); 
+            }
+        };
+
+        /** Resets the current selection state. */
+        const resetSelection = () => {
+            currentSelection.forEach(s => {
+                document.getElementById(s.id).classList.remove('selected');
+            });
+            currentSelection = [];
+            
+            let message = "Select the first letter to begin a word.";
+            if (nextWordIndex < wordData.length) {
+                // Use the clue for the next required word
+                message = `Next up: Find the word for "${wordData[nextWordIndex].clue}".`;
+            }
+            updateDisplay(message);
+        };
+
+        /** Main click handler for the grid cells. */
+        const handleCellClick = (event) => {
+            const cellElement = event.currentTarget;
+            const r = parseInt(cellElement.dataset.r);
+            const c = parseInt(cellElement.dataset.c);
+            const id = cellElement.id;
+            const letter = cellElement.textContent;
+
+            if (cellElement.classList.contains('found')) {
+                return;
+            }
+
+            const selectionObject = { id, r, c, letter };
+
+            if (currentSelection.length === 0) {
+                // First selection
+                currentSelection.push(selectionObject);
+                cellElement.classList.add('selected');
+                updateDisplay("Keep selecting adjacent letters...", letter);
+            } else {
+                const lastSelection = currentSelection[currentSelection.length - 1];
+
+                // Check for adjacency
+                if (!isAdjacent(lastSelection.r, lastSelection.c, r, c)) {
+                    updateDisplay("Letters must be adjacent (H, V, or Diagonal).", currentSelection.map(s => s.letter).join(''));
+                    return;
+                }
+                
+                // Check if the cell is already in the current selection (for backtracking)
+                const existingIndex = currentSelection.findIndex(s => s.id === id);
+
+                if (existingIndex !== -1) {
+                    if (existingIndex === currentSelection.length - 2) {
+                        const removed = currentSelection.pop();
+                        document.getElementById(removed.id).classList.remove('selected');
+                        updateDisplay("Backtracked.", currentSelection.map(s => s.letter).join(''));
+                    }
+                    return;
+                }
+
+                // Valid new selection
+                currentSelection.push(selectionObject);
+                cellElement.classList.add('selected');
+
+                const currentWord = currentSelection.map(s => s.letter).join('');
+                updateDisplay("Current word: ", currentWord);
+            }
+        };
+        
+        // --- Overlay Controls and Transitions ---
+
+        /** Shows the level completion modal. */
+        const showCompletionOverlay = () => {
+            document.getElementById('level-display').textContent = `(Level ${currentPuzzleIndex + 1}/${ALL_PUZZLES.length}) - ${currentPuzzle.theme}`;
+            document.getElementById('completed-overlay').classList.add('visible');
+        };
+
+        /** Shows the final game completion modal. */
+        const showFinalCompletionOverlay = () => {
+            document.getElementById('final-completed-overlay').classList.add('visible');
+        };
+
+        /** Hides all completion modals. */
+        const hideAllOverlays = () => {
+            document.getElementById('completed-overlay').classList.remove('visible');
+            document.getElementById('final-completed-overlay').classList.remove('visible');
+        };
+        
+        /** Public function called by the Next Puzzle button to load the next level. */
+        window.startNextPuzzle = () => {
+            currentPuzzleIndex++;
+            startGame();
+        };
+
+        /** Main function to start or reset the game. */
+        const startGame = (restart = false) => {
+            hideAllOverlays();
+            
+            if (restart) {
+                currentPuzzleIndex = 1; // Reset to the first level
+            }
+            
+            nextWordIndex = 0; // Reset word tracker for the new level
+            
+            // Check if we've run out of levels
+            if (currentPuzzleIndex >= ALL_PUZZLES.length) {
+                showFinalCompletionOverlay();
+                return;
+            }
+
+            initializeBoard();
+            renderGrid();
+            renderWordList();
+            resetSelection();
+            updateDisplay(`Level ${currentPuzzleIndex + 1}/${ALL_PUZZLES.length}. Use the clues to find the words in order.`);
+        };
+
+        // --- Event Listeners and Initialization ---
+
+        document.getElementById('reset-button').addEventListener('click', () => startGame(true));
+        document.getElementById('clear-button').addEventListener('click', resetSelection);
+        document.getElementById('submit-button').addEventListener('click', checkSelection);
+
+        // Start the game when the window loads
+        window.onload = startGame;
+
+    </script>
+</body>
+</html>
