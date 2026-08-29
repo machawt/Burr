@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>10-Day Flashcards</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: system-ui, sans-serif; background: #f4f6f8;
+    color: #18212b; min-height: 100vh;
+  }
+  .app { max-width: 520px; margin: auto; padding: 18px; }
+  h1 { font-size: 1.45rem; margin: 4px 0 14px; text-align:center; }
+  .panel, .card {
+    background: white; border-radius: 18px; padding: 18px;
+    box-shadow: 0 4px 18px #00000012;
+  }
+  .days { display:grid; grid-template-columns:repeat(5,1fr); gap:9px; margin-bottom:18px; }
+  .day {
+    border:0; border-radius:12px; padding:12px 4px; background:#e8edf2;
+    font-weight:700; cursor:pointer;
+  }
+  .day.done { background:#bfe8c8; }
+  .day.current { outline:3px solid #5b7cfa; }
+  .day.locked { opacity:.55; }
+  .progress { height:9px; background:#e8edf2; border-radius:20px; overflow:hidden; margin:10px 0 16px; }
+  .bar { height:100%; width:0%; background:#5b7cfa; transition:.2s; }
+  .meta { display:flex; justify-content:space-between; font-size:.9rem; color:#68727d; }
+  .card { min-height:330px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; margin-top:12px; cursor:pointer; }
+  .label { font-size:.8rem; color:#7b8794; margin-bottom:14px; text-transform:uppercase; letter-spacing:.08em; }
+  .word { font-size:2.4rem; font-weight:800; }
+  .answer { margin-top:22px; font-size:1.5rem; color:#3654b8; }
+  .hint { margin-top:28px; color:#7b8794; }
+  .controls { display:flex; gap:10px; margin-top:14px; }
+  button.action {
+    flex:1; border:0; border-radius:14px; padding:15px; font-size:1rem;
+    font-weight:700; cursor:pointer;
+  }
+  .show { background:#5b7cfa; color:white; }
+  .again { background:#ffd9d9; }
+  .good { background:#ccefd5; }
+  .summary { text-align:center; margin-top:14px; color:#56616c; }
+  .reset { margin-top:14px; background:transparent; border:1px solid #ccd3da; width:100%; }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>7-Word Flashcards</h1>
+
+  <div class="panel">
+    <div class="days" id="days"></div>
+    <div class="meta"><span id="dayTitle">Day 1</span><span id="count">0 / 7</span></div>
+    <div class="progress"><div class="bar" id="bar"></div></div>
+  </div>
+
+  <div class="card" id="card">
+    <div class="label" id="label">Tap to reveal</div>
+    <div class="word" id="word"></div>
+    <div class="answer" id="answer"></div>
+    <div class="hint" id="hint">Tap the card</div>
+  </div>
+
+  <div class="controls">
+    <button class="action again" id="again">Again</button>
+    <button class="action good" id="good">Got it ✓</button>
+  </div>
+
+  <div class="summary" id="summary"></div>
+  <button class="action reset" id="reset">Reset all progress</button>
+</div>
+
+<script>
+const lessons = [
+  [["sit down here","raka ni"],["come","guwa"],["paper","jurra"],["listen","galiya"],["listen you all","buburr-galya apula"],["yes","ngaw"],["no","nika"]],
+  [["wait","burdak"],["where are you going","nyinda ny-boya"],["water","bugula"],["write","wukurrjinga"],["finished","ganapiya"],["correct/get","ma"],["me","ngaypa"]],
+  [["bye","bobo"],["see","na"],["work","jama"],["matches","bol"],["home","rrawa"],["eat","bay"],["moon","ran.gu"]],
+  [["eat","manger"],["drink","boire"],["go","aller"],["come","venir"],["see","voir"],["speak","parler"],["listen","écouter"]],
+  [["big","grand"],["small","petit"],["hot","chaud"],["cold","froid"],["good","bon"],["bad","mauvais"],["easy","facile"]],
+  [["man","homme"],["woman","femme"],["child","enfant"],["family","famille"],["mother","mère"],["father","père"],["brother","frère"]],
+  [["one","un"],["two","deux"],["three","trois"],["four","quatre"],["five","cinq"],["six","six"],["seven","sept"]],
+  [["where","où"],["when","quand"],["who","qui"],["what","quoi"],["why","pourquoi"],["how","comment"],["which","lequel"]],
+  [["happy","heureux"],["sad","triste"],["tired","fatigué"],["busy","occupé"],["ready","prêt"],["hungry","affamé"],["thirsty","assoiffé"]],
+  [["today","aujourd’hui"],["work","travail"],["home","maison"],["time","temps"],["day","jour"],["week","semaine"],["life","vie"]]
+];
+
+let state = JSON.parse(localStorage.getItem("flash10") || "null") || {
+  currentDay: 0,
+  completed: Array(10).fill(false),
+  cards: Array(10).fill(null)
+};
+
+function shuffle(a) {
+  return [...a].sort(() => Math.random() - 0.5);
+}
+function setupDay(day) {
+  if (!state.cards[day] || state.cards[day].length === 0) {
+    state.cards[day] = shuffle(lessons[day]).map(x => ({q:x[0], a:x[1], status:"new"}));
+    save();
+  }
+}
+function save() { localStorage.setItem("flash10", JSON.stringify(state)); }
+
+let revealed = false;
+
+function renderDays() {
+  const el = document.getElementById("days");
+  el.innerHTML = "";
+  for (let i=0;i<10;i++) {
+    const b = document.createElement("button");
+    b.className = "day " + (state.completed[i] ? "done " : "") + (i===state.currentDay ? "current" : "");
+    b.textContent = state.completed[i] ? `✓ ${i+1}` : `Day ${i+1}`;
+    b.onclick = () => { state.currentDay=i; setupDay(i); revealed=false; save(); render(); };
+    el.appendChild(b);
+  }
+}
+function currentCard() {
+  setupDay(state.currentDay);
+  return state.cards[state.currentDay].find(c => c.status !== "done");
+}
+function render() {
+  setupDay(state.currentDay);
+  renderDays();
+  const cards = state.cards[state.currentDay];
+  const done = cards.filter(c=>c.status==="done").length;
+  const c = currentCard();
+
+  document.getElementById("dayTitle").textContent = `Day ${state.currentDay+1}`;
+  document.getElementById("count").textContent = `${done} / 7`;
+  document.getElementById("bar").style.width = `${done/7*100}%`;
+
+  if (!c) {
+    state.completed[state.currentDay] = true;
+    save(); renderDays();
+    document.getElementById("word").textContent = "Day complete! 🎉";
+    document.getElementById("label").textContent = "";
+    document.getElementById("answer").textContent = "";
+    document.getElementById("hint").textContent = "Choose another day above.";
+    document.getElementById("summary").textContent = "7 / 7 cards completed";
+    return;
+  }
+
+  document.getElementById("word").textContent = c.q;
+  document.getElementById("label").textContent = "English";
+  document.getElementById("answer").textContent = revealed ? c.a : "";
+  document.getElementById("hint").textContent = revealed ? "Choose Again or Got it" : "Tap the card to reveal";
+  document.getElementById("summary").textContent = `${10 - state.completed.filter(Boolean).length} day(s) remaining`;
+}
+document.getElementById("card").onclick = () => {
+  if (!currentCard()) return;
+  revealed = !revealed; render();
+};
+document.getElementById("good").onclick = () => {
+  const c=currentCard(); if(!c) return;
+  c.status="done"; revealed=false; save(); render();
+};
+document.getElementById("again").onclick = () => {
+  const c=currentCard(); if(!c) return;
+  // Move the missed card to the end of today's queue.
+  const cards=state.cards[state.currentDay];
+  c.status="retry";
+  const idx=cards.indexOf(c);
+  cards.splice(idx,1);
+  cards.push(c);
+  revealed=false; save(); render();
+};
+document.getElementById("reset").onclick = () => {
+  if(confirm("Reset all 10 days?")) {
+    localStorage.removeItem("flash10");
+    state={currentDay:0,completed:Array(10).fill(false),cards:Array(10).fill(null)};
+    setupDay(0); render();
+  }
+};
+setupDay(0);
+render();
+</script>
+</body>
+</html>
