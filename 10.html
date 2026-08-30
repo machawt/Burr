@@ -1,185 +1,1522 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>10-Day Flashcards</title>
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0">
+
+<title>7 Word Flashcards</title>
+
+
 <style>
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; font-family: system-ui, sans-serif; background: #f4f6f8;
-    color: #18212b; min-height: 100vh;
+
+/* =========================================================
+   BASIC
+   ========================================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  background: #f4f6f8;
+  color: #18212b;
+}
+
+.app {
+  max-width: 520px;
+  margin: auto;
+  padding: 18px;
+}
+
+h1 {
+  text-align: center;
+  font-size: 1.5rem;
+  margin: 4px 0 15px;
+}
+
+
+/* =========================================================
+   PANEL
+   ========================================================= */
+
+.panel {
+  background: white;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 4px 18px #00000012;
+}
+
+
+/* =========================================================
+   DAY BUTTONS
+   ========================================================= */
+
+.days {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.day {
+  border: 0;
+  border-radius: 12px;
+  padding: 12px 3px;
+  background: #e8edf2;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: .85rem;
+}
+
+.day:hover {
+  background: #dce3e9;
+}
+
+.day.current {
+  outline: 3px solid #5b7cfa;
+}
+
+.day.done {
+  background: #bfe8c8;
+}
+
+
+/* =========================================================
+   PROGRESS
+   ========================================================= */
+
+.meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: .95rem;
+  color: #68727d;
+}
+
+.progress {
+  height: 10px;
+  background: #e8edf2;
+  border-radius: 20px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.bar {
+  height: 100%;
+  width: 0%;
+  background: #5b7cfa;
+  transition: width .25s ease;
+}
+
+
+/* =========================================================
+   FLASHCARD
+   ========================================================= */
+
+.card {
+  background: white;
+  border-radius: 18px;
+
+  min-height: 330px;
+
+  margin-top: 14px;
+  padding: 20px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  text-align: center;
+
+  box-shadow: 0 4px 18px #00000012;
+
+  cursor: pointer;
+
+  user-select: none;
+}
+
+.label {
+  font-size: .8rem;
+  color: #7b8794;
+
+  margin-bottom: 14px;
+
+  text-transform: uppercase;
+
+  letter-spacing: .08em;
+}
+
+.word {
+  font-size: 2.4rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.answer {
+  margin-top: 22px;
+  font-size: 1.5rem;
+  color: #3654b8;
+}
+
+.hint {
+  margin-top: 28px;
+  color: #7b8794;
+}
+
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+.controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+button.action {
+  flex: 1;
+
+  border: 0;
+  border-radius: 14px;
+
+  padding: 15px;
+
+  font-size: 1rem;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.again {
+  background: #ffd9d9;
+}
+
+.good {
+  background: #ccefd5;
+}
+
+.again:hover {
+  background: #ffcaca;
+}
+
+.good:hover {
+  background: #b9e7c5;
+}
+
+button:disabled {
+  opacity: .5;
+  cursor: default;
+}
+
+
+/* =========================================================
+   SUMMARY
+   ========================================================= */
+
+.summary {
+  text-align: center;
+  margin-top: 14px;
+
+  color: #56616c;
+
+  min-height: 24px;
+}
+
+
+/* =========================================================
+   SAVED MESSAGE
+   ========================================================= */
+
+.saved {
+  text-align: center;
+
+  font-size: .8rem;
+
+  color: #4d8a5b;
+
+  margin-top: 5px;
+
+  min-height: 18px;
+}
+
+
+/* =========================================================
+   COMPLETE
+   ========================================================= */
+
+.complete-title {
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+
+/* =========================================================
+   RESET
+   ========================================================= */
+
+.reset-day {
+  margin-top: 14px;
+
+  width: 100%;
+
+  background: white;
+
+  color: #56616c;
+
+  border: 1px solid #ccd3da !important;
+}
+
+.reset-day:hover {
+  background: #f0f2f4;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 400px) {
+
+  .app {
+    padding: 12px;
   }
-  .app { max-width: 520px; margin: auto; padding: 18px; }
-  h1 { font-size: 1.45rem; margin: 4px 0 14px; text-align:center; }
-  .panel, .card {
-    background: white; border-radius: 18px; padding: 18px;
-    box-shadow: 0 4px 18px #00000012;
-  }
-  .days { display:grid; grid-template-columns:repeat(5,1fr); gap:9px; margin-bottom:18px; }
+
   .day {
-    border:0; border-radius:12px; padding:12px 4px; background:#e8edf2;
-    font-weight:700; cursor:pointer;
+    font-size: .75rem;
+    padding: 10px 2px;
   }
-  .day.done { background:#bfe8c8; }
-  .day.current { outline:3px solid #5b7cfa; }
-  .day.locked { opacity:.55; }
-  .progress { height:9px; background:#e8edf2; border-radius:20px; overflow:hidden; margin:10px 0 16px; }
-  .bar { height:100%; width:0%; background:#5b7cfa; transition:.2s; }
-  .meta { display:flex; justify-content:space-between; font-size:.9rem; color:#68727d; }
-  .card { min-height:330px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; margin-top:12px; cursor:pointer; }
-  .label { font-size:.8rem; color:#7b8794; margin-bottom:14px; text-transform:uppercase; letter-spacing:.08em; }
-  .word { font-size:2.4rem; font-weight:800; }
-  .answer { margin-top:22px; font-size:1.5rem; color:#3654b8; }
-  .hint { margin-top:28px; color:#7b8794; }
-  .controls { display:flex; gap:10px; margin-top:14px; }
-  button.action {
-    flex:1; border:0; border-radius:14px; padding:15px; font-size:1rem;
-    font-weight:700; cursor:pointer;
+
+  .word {
+    font-size: 2rem;
   }
-  .show { background:#5b7cfa; color:white; }
-  .again { background:#ffd9d9; }
-  .good { background:#ccefd5; }
-  .summary { text-align:center; margin-top:14px; color:#56616c; }
-  .reset { margin-top:14px; background:transparent; border:1px solid #ccd3da; width:100%; }
+
+  .card {
+    min-height: 300px;
+  }
+
+}
+
 </style>
+
 </head>
+
+
 <body>
+
+
 <div class="app">
-  <h1>7-Word Flashcards</h1>
 
-  <div class="panel">
-    <div class="days" id="days"></div>
-    <div class="meta"><span id="dayTitle">Day 1</span><span id="count">0 / 7</span></div>
-    <div class="progress"><div class="bar" id="bar"></div></div>
+
+<h1>7-Word Flashcards</h1>
+
+
+<!-- =====================================================
+     DAYS
+     ===================================================== -->
+
+<div class="panel">
+
+  <div
+    class="days"
+    id="days">
   </div>
 
-  <div class="card" id="card">
-    <div class="label" id="label">Tap to reveal</div>
-    <div class="word" id="word"></div>
-    <div class="answer" id="answer"></div>
-    <div class="hint" id="hint">Tap the card</div>
+
+  <div class="meta">
+
+    <span id="dayTitle">
+      Day 1
+    </span>
+
+    <span id="count">
+      0 / 7
+    </span>
+
   </div>
 
-  <div class="controls">
-    <button class="action again" id="again">Again</button>
-    <button class="action good" id="good">Got it ✓</button>
+
+  <div class="progress">
+
+    <div
+      class="bar"
+      id="bar">
+    </div>
+
   </div>
 
-  <div class="summary" id="summary"></div>
-  <button class="action reset" id="reset">Reset all progress</button>
 </div>
 
+
+<!-- =====================================================
+     CARD
+     ===================================================== -->
+
+<div
+  class="card"
+  id="card">
+
+
+  <div
+    class="label"
+    id="label">
+
+    English
+
+  </div>
+
+
+  <div
+    class="word"
+    id="word">
+  </div>
+
+
+  <div
+    class="answer"
+    id="answer">
+  </div>
+
+
+  <div
+    class="hint"
+    id="hint">
+
+    Tap the card to reveal
+
+  </div>
+
+
+</div>
+
+
+<!-- =====================================================
+     CONTROLS
+     ===================================================== -->
+
+<div class="controls">
+
+
+  <button
+    class="action again"
+    id="again">
+
+    Again
+
+  </button>
+
+
+  <button
+    class="action good"
+    id="good">
+
+    Got it ✓
+
+  </button>
+
+
+</div>
+
+
+<!-- =====================================================
+     SUMMARY
+     ===================================================== -->
+
+<div
+  class="summary"
+  id="summary">
+</div>
+
+
+<div
+  class="saved"
+  id="saved">
+</div>
+
+
+<!-- =====================================================
+     RESET ONLY CURRENT DAY
+     ===================================================== -->
+
+<button
+  class="action reset-day"
+  id="resetDay">
+
+  Reset This Day
+
+</button>
+
+
+</div>
+
+
+
 <script>
+
+
+/* =========================================================
+   LESSONS
+   ========================================================= */
+
 const lessons = [
-  [["sit down here","raka ni"],["come","guwa"],["paper","jurra"],["listen","galiya"],["listen you all","buburr-galya apula"],["yes","ngaw"],["no","nika"]],
-  [["wait","burdak"],["where are you going","nyinda ny-boya"],["water","bugula"],["write","wukurrjinga"],["finished","ganapiya"],["correct/get","ma"],["me","ngaypa"]],
-  [["bye","bobo"],["see","na"],["work","jama"],["matches","bol"],["home","rrawa"],["eat","bay"],["moon","ran.gu"]],
-  [["sun","marnnga"],["star","gata"],["canoe","lipalipa"],["picture","mun-mawunga"],["smoke","jolnga"],["shelter","belabila"],["wife of Ngarrich","Ngarrijan"]],
-  [["tree/branch","gun-jong"],["skin","malk"],["mother of ngarrich","wamutchan"],["daughter of ngarrich"," Gamanyjan"],["son of Ngarrich"," Gamarrang"],["grand daughter Ngarrich","Bulanyjan"],["easy","facile"]],
-  [["man","homme"],["woman","femme"],["child","enfant"],["family","famille"],["mother","mère"],["father","père"],["brother","frère"]],
-  [["one","un"],["two","deux"],["three","trois"],["four","quatre"],["five","cinq"],["six","six"],["seven","sept"]], Gamanyjan 
-  [["where","où"],["when","quand"],["who","qui"],["what","quoi"],["why","pourquoi"],["how","comment"],["which","lequel"]],
-  [["happy","heureux"],["sad","triste"],["tired","fatigué"],["busy","occupé"],["ready","prêt"],["hungry","affamé"],["thirsty","assoiffé"]],
-  [["today","aujourd’hui"],["work","travail"],["home","maison"],["time","temps"],["day","jour"],["week","semaine"],["life","vie"]]
+
+  /* DAY 1 */
+
+  [
+    ["sit down here", "raka ni"],
+    ["come", "guwa"],
+    ["paper", "jurra"],
+    ["listen", "galiya"],
+    ["listen you all", "buburr-galya apula"],
+    ["yes", "ngaw"],
+    ["no", "nika"]
+  ],
+
+
+  /* DAY 2 */
+
+  [
+    ["wait", "burdak"],
+    ["where are you going", "nyinda ny-boya"],
+    ["water", "bugula"],
+    ["write", "wukurrjinga"],
+    ["finished", "ganapiya"],
+    ["correct/get", "ma"],
+    ["me", "ngaypa"]
+  ],
+
+
+  /* DAY 3 */
+
+  [
+    ["bye", "bobo"],
+    ["see", "na"],
+    ["work", "jama"],
+    ["matches", "bol"],
+    ["home", "rrawa"],
+    ["eat", "bay"],
+    ["moon", "ran.gu"]
+  ],
+
+
+  /* DAY 4 */
+
+  [
+    ["sun", "marnnga"],
+    ["star", "gata"],
+    ["canoe", "lipalipa"],
+    ["picture", "mun-mawunga"],
+    ["smoke", "jolnga"],
+    ["shelter", "belabila"],
+    ["wife of Ngarrich", "Ngarrijan"]
+  ],
+
+
+  /* DAY 5 */
+
+  [
+    ["tree/branch", "gun-jong"],
+    ["skin", "malk"],
+    ["mother of ngarrich", "wamutchan"],
+    ["daughter of ngarrich", "Gamanyjan"],
+    ["son of Ngarrich", "Gamarrang"],
+    ["grand daughter Ngarrich", "Bulanyjan"],
+    ["easy", "facile"]
+  ],
+
+
+  /* DAY 6 */
+
+  [
+    ["man", "homme"],
+    ["woman", "femme"],
+    ["child", "enfant"],
+    ["family", "famille"],
+    ["mother", "mère"],
+    ["father", "père"],
+    ["brother", "frère"]
+  ],
+
+
+  /* DAY 7 */
+
+  [
+    ["one", "un"],
+    ["two", "deux"],
+    ["three", "trois"],
+    ["four", "quatre"],
+    ["five", "cinq"],
+    ["six", "six"],
+    ["seven", "sept"]
+  ],
+
+
+  /* DAY 8 */
+
+  [
+    ["where", "où"],
+    ["when", "quand"],
+    ["who", "qui"],
+    ["what", "quoi"],
+    ["why", "pourquoi"],
+    ["how", "comment"],
+    ["which", "lequel"]
+  ],
+
+
+  /* DAY 9 */
+
+  [
+    ["happy", "heureux"],
+    ["sad", "triste"],
+    ["tired", "fatigué"],
+    ["busy", "occupé"],
+    ["ready", "prêt"],
+    ["hungry", "affamé"],
+    ["thirsty", "assoiffé"]
+  ],
+
+
+  /* DAY 10 */
+
+  [
+    ["today", "aujourd’hui"],
+    ["work", "travail"],
+    ["home", "maison"],
+    ["time", "temps"],
+    ["day", "jour"],
+    ["week", "semaine"],
+    ["life", "vie"]
+  ]
+
 ];
 
-let state = JSON.parse(localStorage.getItem("flash10") || "null") || {
-  currentDay: 0,
-  completed: Array(10).fill(false),
-  cards: Array(10).fill(null)
-};
 
-function shuffle(a) {
-  return [...a].sort(() => Math.random() - 0.5);
-}
-function setupDay(day) {
-  if (!state.cards[day] || state.cards[day].length === 0) {
-state.cards[day] = shuffle(lessons[day]).map(x => ({
-  q:x[0], a:x[1], correct:0
-}));    
-save();
+/* =========================================================
+   STORAGE
+   ========================================================= */
+
+/*
+   NEW STORAGE VERSION.
+
+   This is deliberately different from the previous
+   versions so old broken data cannot interfere.
+*/
+
+const STORAGE_KEY =
+  "sevenWordFlashcards_v3";
+
+
+/*
+   The application stores:
+
+   {
+     currentDay: 0,
+
+     days: [
+
+       {
+         cards: [
+           {
+             id: 0,
+             q: "...",
+             a: "...",
+             correct: 0
+           },
+           ...
+         ],
+
+         queue: [0,1,2,3,4,5,6]
+       },
+
+       ...
+     ]
+   }
+
+*/
+
+
+let saved =
+  localStorage.getItem(STORAGE_KEY);
+
+
+let state;
+
+
+if (saved) {
+
+  try {
+
+    state = JSON.parse(saved);
+
+  } catch (error) {
+
+    state = null;
+
   }
+
 }
-function save() { localStorage.setItem("flash10", JSON.stringify(state)); }
+
+
+if (
+  !state ||
+  !Array.isArray(state.days) ||
+  state.days.length !== 10
+) {
+
+  state = {
+
+    currentDay: 0,
+
+    days: Array(10).fill(null)
+
+  };
+
+}
+
+
+let currentDay =
+  Number(state.currentDay) || 0;
+
 
 let revealed = false;
 
-function renderDays() {
-  const el = document.getElementById("days");
-  el.innerHTML = "";
-  for (let i=0;i<10;i++) {
-    const b = document.createElement("button");
-    b.className = "day " + (state.completed[i] ? "done " : "") + (i===state.currentDay ? "current" : "");
-    b.textContent = state.completed[i] ? `✓ ${i+1}` : `Day ${i+1}`;
-    b.onclick = () => { state.currentDay=i; setupDay(i); revealed=false; save(); render(); };
-    el.appendChild(b);
-  }
+
+/* =========================================================
+   SAVE
+   ========================================================= */
+
+function save() {
+
+  state.currentDay = currentDay;
+
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(state)
+  );
+
 }
-function currentCard() {
-  setupDay(state.currentDay);
-return state.cards[state.currentDay].find(c => c.correct < 3);}
-function render() {
-  setupDay(state.currentDay);
-  renderDays();
-  const cards = state.cards[state.currentDay];
-const done = cards.filter(c=>c.correct >= 3).length;
- const c = currentCard();
 
-  document.getElementById("dayTitle").textContent = `Day ${state.currentDay+1}`;
-  document.getElementById("count").textContent = `${done} / 7`;
-  document.getElementById("bar").style.width = `${done/7*100}%`;
 
-  if (!c) {
-    state.completed[state.currentDay] = true;
-    save(); renderDays();
-    document.getElementById("word").textContent = "Day complete! 🎉";
-    document.getElementById("label").textContent = "";
-    document.getElementById("answer").textContent = "";
-    document.getElementById("hint").textContent = "Choose another day above.";
-    document.getElementById("summary").textContent = "7 / 7 cards completed";
-    return;
+/* =========================================================
+   SHUFFLE
+   ========================================================= */
+
+function shuffle(array) {
+
+  const result = [...array];
+
+
+  for (
+    let i = result.length - 1;
+    i > 0;
+    i--
+  ) {
+
+    const j =
+      Math.floor(
+        Math.random() * (i + 1)
+      );
+
+
+    [
+      result[i],
+      result[j]
+    ] =
+    [
+      result[j],
+      result[i]
+    ];
+
   }
 
-  document.getElementById("word").textContent = c.q;
-  document.getElementById("label").textContent = "English";
-  document.getElementById("answer").textContent = revealed ? c.a : "";
-  document.getElementById("hint").textContent = revealed ? "Choose Again or Got it" : "Tap the card to reveal";
-  document.getElementById("summary").textContent = `${10 - state.completed.filter(Boolean).length} day(s) remaining`;
-}
-document.getElementById("card").onclick = () => {
-  if (!currentCard()) return;
-  revealed = !revealed; render();
-};
-document.getElementById("good").onclick = () => {
-  const c=currentCard(); 
-  if(!c) return;
 
-  c.correct++;
-  revealed=false;
+  return result;
+
+}
+
+
+/* =========================================================
+   CREATE DAY
+   ========================================================= */
+
+function createDay(dayNumber) {
+
+  /*
+     Create the 7 permanent cards.
+
+     Their scores live on the cards and
+     NEVER disappear.
+  */
+
+  const cards =
+    shuffle(
+      lessons[dayNumber]
+    ).map(
+      (item, index) => {
+
+        return {
+
+          id: index,
+
+          q: item[0],
+
+          a: item[1],
+
+          correct: 0
+
+        };
+
+      }
+    );
+
+
+  /*
+     Queue contains the IDs of the cards.
+
+     Example:
+
+     [4, 1, 6, 0, 3, 5, 2]
+
+     The first ID is the current card.
+  */
+
+  const queue =
+    cards.map(
+      card => card.id
+    );
+
+
+  state.days[dayNumber] = {
+
+    cards: cards,
+
+    queue: queue
+
+  };
+
+
   save();
-  render();
-};
-document.getElementById("again").onclick = () => {
-  const c=currentCard(); if(!c) return;
-  // Move the missed card to the end of today's queue.
-  const cards=state.cards[state.currentDay];
-  c.status="retry";
-  const idx=cards.indexOf(c);
-  cards.splice(idx,1);
-  cards.push(c);
-  revealed=false; save(); render();
-};
- 
-document.getElementById("reset").onclick = () => {
-  if(confirm("Reset all 10 days?")) {
-    localStorage.removeItem("flash10");
-    state={currentDay:0,completed:Array(10).fill(false),cards:Array(10).fill(null)};
-    setupDay(0); render();
+
+}
+
+
+/* =========================================================
+   ENSURE DAY EXISTS
+   ========================================================= */
+
+function ensureDay(dayNumber) {
+
+  const day =
+    state.days[dayNumber];
+
+
+  if (
+    !day ||
+    !Array.isArray(day.cards) ||
+    day.cards.length !== 7 ||
+    !Array.isArray(day.queue)
+  ) {
+
+    createDay(dayNumber);
+
   }
+
+}
+
+
+/* =========================================================
+   CURRENT DAY
+   ========================================================= */
+
+function getDay() {
+
+  ensureDay(currentDay);
+
+  return state.days[currentDay];
+
+}
+
+
+/* =========================================================
+   GET CARD BY ID
+   ========================================================= */
+
+function getCardById(id) {
+
+  const day = getDay();
+
+  return day.cards.find(
+    card => card.id === id
+  );
+
+}
+
+
+/* =========================================================
+   CURRENT CARD
+   ========================================================= */
+
+function getCurrentCard() {
+
+  const day = getDay();
+
+
+  /*
+     Remove any completed cards accidentally
+     left in the queue.
+  */
+
+  day.queue =
+    day.queue.filter(
+      id => {
+
+        const card =
+          day.cards.find(
+            c => c.id === id
+          );
+
+        return (
+          card &&
+          card.correct < 3
+        );
+
+      }
+    );
+
+
+  /*
+     The first ID in the queue is
+     always the current card.
+  */
+
+  if (day.queue.length === 0) {
+
+    return null;
+
+  }
+
+
+  return getCardById(
+    day.queue[0]
+  );
+
+}
+
+
+/* =========================================================
+   COUNT COMPLETED WORDS
+   ========================================================= */
+
+function completedCount() {
+
+  const day = getDay();
+
+
+  return day.cards.filter(
+    card => card.correct >= 3
+  ).length;
+
+}
+
+
+/* =========================================================
+   DAY COMPLETE
+   ========================================================= */
+
+function isDayComplete() {
+
+  const day = getDay();
+
+
+  /*
+     IMPORTANT:
+
+     We check the ORIGINAL 7 CARDS.
+
+     We do NOT check the queue.
+
+     Therefore completed words can be removed
+     from the queue while still counting toward
+     the 7/7 completion test.
+  */
+
+  return (
+    day.cards.length === 7 &&
+    day.cards.every(
+      card => card.correct >= 3
+    )
+  );
+
+}
+
+
+/* =========================================================
+   RENDER DAYS
+   ========================================================= */
+
+function renderDays() {
+
+  const container =
+    document.getElementById("days");
+
+
+  container.innerHTML = "";
+
+
+  for (
+    let i = 0;
+    i < 10;
+    i++
+  ) {
+
+    const button =
+      document.createElement("button");
+
+
+    button.className = "day";
+
+
+    if (i === currentDay) {
+
+      button.classList.add(
+        "current"
+      );
+
+    }
+
+
+    if (
+      state.days[i] &&
+      state.days[i].cards &&
+      state.days[i].cards.length === 7
+    ) {
+
+      const done =
+        state.days[i].cards.every(
+          card => card.correct >= 3
+        );
+
+
+      if (done) {
+
+        button.classList.add(
+          "done"
+        );
+
+        button.textContent =
+          `✓ Day ${i + 1}`;
+
+      } else {
+
+        button.textContent =
+          `Day ${i + 1}`;
+
+      }
+
+    } else {
+
+      button.textContent =
+        `Day ${i + 1}`;
+
+    }
+
+
+    /*
+       Clicking a day ONLY changes the
+       selected day.
+
+       It does NOT reset anything.
+    */
+
+    button.onclick = function() {
+
+      currentDay = i;
+
+      ensureDay(currentDay);
+
+      revealed = false;
+
+      save();
+
+      render();
+
+    };
+
+
+    container.appendChild(button);
+
+  }
+
+}
+
+
+/* =========================================================
+   RENDER
+   ========================================================= */
+
+function render() {
+
+  ensureDay(currentDay);
+
+
+  renderDays();
+
+
+  const day =
+    getDay();
+
+
+  const done =
+    completedCount();
+
+
+  document.getElementById(
+    "dayTitle"
+  ).textContent =
+    `Day ${currentDay + 1}`;
+
+
+  document.getElementById(
+    "count"
+  ).textContent =
+    `${done} / 7`;
+
+
+  document.getElementById(
+    "bar"
+  ).style.width =
+    `${(done / 7) * 100}%`;
+
+
+  /* =====================================================
+     COMPLETE
+     ===================================================== */
+
+  if (isDayComplete()) {
+
+    document.getElementById(
+      "label"
+    ).textContent =
+      "";
+
+
+    document.getElementById(
+      "word"
+    ).textContent =
+      "DAY COMPLETE! 🎉";
+
+
+    document.getElementById(
+      "word"
+    ).className =
+      "word complete-title";
+
+
+    document.getElementById(
+      "answer"
+    ).textContent =
+      "";
+
+
+    document.getElementById(
+      "hint"
+    ).textContent =
+      "All 7 words are 3/3 correct.";
+
+
+    document.getElementById(
+      "summary"
+    ).textContent =
+      "7 / 7 words complete";
+
+
+    document.getElementById(
+      "saved"
+    ).textContent =
+      "Progress saved";
+
+
+    document.getElementById(
+      "good"
+    ).disabled = true;
+
+
+    document.getElementById(
+      "again"
+    ).disabled = true;
+
+
+    return;
+
+  }
+
+
+  /* =====================================================
+     NORMAL CARD
+     ===================================================== */
+
+  document.getElementById(
+    "good"
+  ).disabled = false;
+
+
+  document.getElementById(
+    "again"
+  ).disabled = false;
+
+
+  const card =
+    getCurrentCard();
+
+
+  if (!card) {
+
+    return;
+
+  }
+
+
+  document.getElementById(
+    "label"
+  ).textContent =
+    "English";
+
+
+  document.getElementById(
+    "word"
+  ).className =
+    "word";
+
+
+  document.getElementById(
+    "word"
+  ).textContent =
+    card.q;
+
+
+  document.getElementById(
+    "answer"
+  ).textContent =
+    revealed
+      ? card.a
+      : "";
+
+
+  document.getElementById(
+    "hint"
+  ).textContent =
+    revealed
+      ? "Choose Again or Got it"
+      : "Tap the card to reveal";
+
+
+  document.getElementById(
+    "summary"
+  ).textContent =
+    `${done} / 7 words complete • ` +
+    `This word: ${card.correct} / 3 correct`;
+
+
+  document.getElementById(
+    "saved"
+  ).textContent =
+    "Progress saved";
+
+}
+
+
+/* =========================================================
+   REVEAL CARD
+   ========================================================= */
+
+document.getElementById(
+  "card"
+).onclick = function() {
+
+
+  if (isDayComplete()) {
+
+    return;
+
+  }
+
+
+  revealed =
+    !revealed;
+
+
+  render();
+
 };
-setupDay(0);
+
+
+/* =========================================================
+   GOT IT
+   ========================================================= */
+
+document.getElementById(
+  "good"
+).onclick = function(event) {
+
+
+  /*
+     Stop this click from also
+     clicking the card.
+  */
+
+  event.stopPropagation();
+
+
+  if (isDayComplete()) {
+
+    return;
+
+  }
+
+
+  const day =
+    getDay();
+
+
+  /*
+     Get the CURRENT ID from the
+     front of the queue.
+  */
+
+  const currentId =
+    day.queue[0];
+
+
+  const card =
+    getCardById(currentId);
+
+
+  if (!card) {
+
+    return;
+
+  }
+
+
+  /* =====================================================
+     RECORD CORRECT ANSWER
+     ===================================================== */
+
+  /*
+     THIS is the permanent score.
+
+     Example:
+
+     0 -> 1
+     1 -> 2
+     2 -> 3
+
+     It cannot go above 3.
+  */
+
+  if (card.correct < 3) {
+
+    card.correct =
+      card.correct + 1;
+
+  }
+
+
+  /*
+     Remove the current card
+     from the front of the queue.
+  */
+
+  day.queue.shift();
+
+
+  /*
+     If it has NOT reached 3,
+     put it at the BACK of the queue.
+
+     If it has reached 3,
+     leave it out of the queue.
+  */
+
+  if (card.correct < 3) {
+
+    day.queue.push(
+      card.id
+    );
+
+  }
+
+
+  /*
+     Save IMMEDIATELY.
+
+     The score is now stored.
+  */
+
+  save();
+
+
+  /*
+     Hide answer.
+  */
+
+  revealed = false;
+
+
+  /*
+     Show next card.
+  */
+
+  render();
+
+};
+
+
+/* =========================================================
+   AGAIN
+   ========================================================= */
+
+document.getElementById(
+  "again"
+).onclick = function(event) {
+
+
+  event.stopPropagation();
+
+
+  if (isDayComplete()) {
+
+    return;
+
+  }
+
+
+  const day =
+    getDay();
+
+
+  /*
+     Get current card.
+  */
+
+  const currentId =
+    day.queue[0];
+
+
+  if (
+    currentId === undefined
+  ) {
+
+    return;
+
+  }
+
+
+  /*
+     Remove from front.
+  */
+
+  day.queue.shift();
+
+
+  /*
+     Put at back.
+
+     IMPORTANT:
+
+     The correct score DOES NOT CHANGE.
+  */
+
+  day.queue.push(
+    currentId
+  );
+
+
+  save();
+
+
+  revealed = false;
+
+
+  render();
+
+};
+
+
+/* =========================================================
+   RESET ONLY THIS DAY
+   ========================================================= */
+
+document.getElementById(
+  "resetDay"
+).onclick = function(event) {
+
+
+  event.stopPropagation();
+
+
+  const dayName =
+    `Day ${currentDay + 1}`;
+
+
+  const answer =
+    confirm(
+      `Reset ${dayName} only?\n\n` +
+      `All scores for ${dayName} will be reset.\n\n` +
+      `The other 9 days will NOT be changed.`
+    );
+
+
+  if (!answer) {
+
+    return;
+
+  }
+
+
+  /*
+     ONLY THIS DAY is recreated.
+  */
+
+  createDay(currentDay);
+
+
+  revealed = false;
+
+
+  render();
+
+};
+
+
+/* =========================================================
+   START
+   ========================================================= */
+
+ensureDay(currentDay);
+
+save();
+
 render();
+
 </script>
+
 </body>
+
 </html>
+```
