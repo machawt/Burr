@@ -95,8 +95,10 @@ function shuffle(a) {
 }
 function setupDay(day) {
   if (!state.cards[day] || state.cards[day].length === 0) {
-    state.cards[day] = shuffle(lessons[day]).map(x => ({q:x[0], a:x[1], status:"new"}));
-    save();
+state.cards[day] = shuffle(lessons[day]).map(x => ({
+  q:x[0], a:x[1], correct:0
+}));    
+save();
   }
 }
 function save() { localStorage.setItem("flash10", JSON.stringify(state)); }
@@ -116,14 +118,13 @@ function renderDays() {
 }
 function currentCard() {
   setupDay(state.currentDay);
-  return state.cards[state.currentDay].find(c => c.status !== "done");
-}
+return state.cards[state.currentDay].find(c => c.correct < 3);}
 function render() {
   setupDay(state.currentDay);
   renderDays();
   const cards = state.cards[state.currentDay];
-  const done = cards.filter(c=>c.status==="done").length;
-  const c = currentCard();
+const done = cards.filter(c=>c.correct >= 3).length;
+ const c = currentCard();
 
   document.getElementById("dayTitle").textContent = `Day ${state.currentDay+1}`;
   document.getElementById("count").textContent = `${done} / 7`;
@@ -151,8 +152,13 @@ document.getElementById("card").onclick = () => {
   revealed = !revealed; render();
 };
 document.getElementById("good").onclick = () => {
-  const c=currentCard(); if(!c) return;
-  c.status="done"; revealed=false; save(); render();
+  const c=currentCard(); 
+  if(!c) return;
+
+  c.correct++;
+  revealed=false;
+  save();
+  render();
 };
 document.getElementById("again").onclick = () => {
   const c=currentCard(); if(!c) return;
@@ -164,6 +170,7 @@ document.getElementById("again").onclick = () => {
   cards.push(c);
   revealed=false; save(); render();
 };
+ 
 document.getElementById("reset").onclick = () => {
   if(confirm("Reset all 10 days?")) {
     localStorage.removeItem("flash10");
