@@ -560,7 +560,7 @@ const lessons = [
     ["mother of Ngarrichan", "Wamutchan"],
     ["father of Ngarrichan", "Wamut"],
     ["son of Ngarrichan", "Gammarang"],
-    ["Grandson of Ngarrichan", "Bulanym9"]
+    ["Grandson of Ngarrichan", "Bulany"]
   ],
 
 
@@ -580,26 +580,26 @@ const lessons = [
   /* DAY 9 */
 
   [
-    ["happy", "heureux"],
-    ["sad", "triste"],
-    ["tired", "fatigué"],
-    ["busy", "occupé"],
-    ["ready", "prêt"],
-    ["hungry", "affamé"],
-    ["thirsty", "assoiffé"]
+    ["1", "gun-ngardapa"],
+    ["2", "awirri-jirrapa"],
+    ["2 people and 1 wallaby", "awirri-jirrapa gugaliya yerrch rrapa gornabola an-ngardapa"],
+    ["1 woman", "jin-ngardapa jin-gugaliya"],
+    ["1 man", "an-ngardapa an-gugaliya"],
+    ["people", "gugaliya yerrcha"],
+    ["the woman lit the fire", "Jin-gugaliya bol ngana gu-wuna."]
   ],
 
 
   /* DAY 10 */
 
   [
-    ["today", "aujourd’hui"],
-    ["work", "travail"],
-    ["home", "maison"],
-    ["time", "temps"],
-    ["day", "jour"],
-    ["week", "semaine"],
-    ["life", "vie"]
+    ["dilly bag", "burlapurr"],
+    ["yam", "mun-banda"],
+    ["the woman went for yams", "jin-gugaliya jiny-bona mun-banda"],
+    ["children", "gu-ngarda yerrcha"],
+    ["the children climbed the tree", "gu-ngarda yerrcha gu-jong aburr-warrchinga "],
+    ["the woman dug out yams", "Jin-gugaliya mun-banda mu-yerrnjinga jinyu-ni"],
+    ["children like yams", "Gu-ngarda yerrcha jol aburr-nirra mun-banda"]
   ]
 
 ];
@@ -609,44 +609,8 @@ const lessons = [
    STORAGE
    ========================================================= */
 
-/*
-   NEW STORAGE VERSION.
-
-   This is deliberately different from the previous
-   versions so old broken data cannot interfere.
-*/
-
 const STORAGE_KEY =
-  "sevenWordFlashcards_v3";
-
-
-/*
-   The application stores:
-
-   {
-     currentDay: 0,
-
-     days: [
-
-       {
-         cards: [
-           {
-             id: 0,
-             q: "...",
-             a: "...",
-             correct: 0
-           },
-           ...
-         ],
-
-         queue: [0,1,2,3,4,5,6]
-       },
-
-       ...
-     ]
-   }
-
-*/
+  "sevenWordFlashcards_v4";
 
 
 let saved =
@@ -674,14 +638,14 @@ if (saved) {
 if (
   !state ||
   !Array.isArray(state.days) ||
-  state.days.length !== 10
+  state.days.length !== lessons.length
 ) {
 
   state = {
 
     currentDay: 0,
 
-    days: Array(10).fill(null)
+    days: Array(lessons.length).fill(null)
 
   };
 
@@ -756,10 +720,10 @@ function shuffle(array) {
 function createDay(dayNumber) {
 
   /*
-     Create the 7 permanent cards.
+     Create the seven permanent cards.
 
-     Their scores live on the cards and
-     NEVER disappear.
+     Each card has its own permanent
+     correct score.
   */
 
   const cards =
@@ -785,13 +749,10 @@ function createDay(dayNumber) {
 
 
   /*
-     Queue contains the IDs of the cards.
+     The queue contains the card IDs.
 
-     Example:
-
-     [4, 1, 6, 0, 3, 5, 2]
-
-     The first ID is the current card.
+     The first ID is the card currently
+     being shown.
   */
 
   const queue =
@@ -876,8 +837,8 @@ function getCurrentCard() {
 
 
   /*
-     Remove any completed cards accidentally
-     left in the queue.
+     Remove completed cards from the queue
+     if any are accidentally still present.
   */
 
   day.queue =
@@ -897,11 +858,6 @@ function getCurrentCard() {
       }
     );
 
-
-  /*
-     The first ID in the queue is
-     always the current card.
-  */
 
   if (day.queue.length === 0) {
 
@@ -942,18 +898,6 @@ function isDayComplete() {
   const day = getDay();
 
 
-  /*
-     IMPORTANT:
-
-     We check the ORIGINAL 7 CARDS.
-
-     We do NOT check the queue.
-
-     Therefore completed words can be removed
-     from the queue while still counting toward
-     the 7/7 completion test.
-  */
-
   return (
     day.cards.length === 7 &&
     day.cards.every(
@@ -979,7 +923,7 @@ function renderDays() {
 
   for (
     let i = 0;
-    i < 10;
+    i < lessons.length;
     i++
   ) {
 
@@ -1036,10 +980,8 @@ function renderDays() {
 
 
     /*
-       Clicking a day ONLY changes the
-       selected day.
-
-       It does NOT reset anything.
+       Selecting a day changes only the
+       selected day. It does not reset it.
     */
 
     button.onclick = function() {
@@ -1272,10 +1214,9 @@ document.getElementById(
   "good"
 ).onclick = function(event) {
 
-
   /*
      Stop this click from also
-     clicking the card.
+     triggering the card.
   */
 
   event.stopPropagation();
@@ -1293,7 +1234,7 @@ document.getElementById(
 
 
   /*
-     Get the CURRENT ID from the
+     Get the current card from the
      front of the queue.
   */
 
@@ -1312,20 +1253,10 @@ document.getElementById(
   }
 
 
-  /* =====================================================
-     RECORD CORRECT ANSWER
-     ===================================================== */
-
   /*
-     THIS is the permanent score.
+     Increase the score by one.
 
-     Example:
-
-     0 -> 1
-     1 -> 2
-     2 -> 3
-
-     It cannot go above 3.
+     Maximum score is 3.
   */
 
   if (card.correct < 3) {
@@ -1345,11 +1276,10 @@ document.getElementById(
 
 
   /*
-     If it has NOT reached 3,
-     put it at the BACK of the queue.
+     If the card is not yet 3/3,
+     put it at the back.
 
-     If it has reached 3,
-     leave it out of the queue.
+     If it is 3/3, leave it out.
   */
 
   if (card.correct < 3) {
@@ -1362,24 +1292,14 @@ document.getElementById(
 
 
   /*
-     Save IMMEDIATELY.
-
-     The score is now stored.
+     Save the new score.
   */
 
   save();
 
 
-  /*
-     Hide answer.
-  */
-
   revealed = false;
 
-
-  /*
-     Show next card.
-  */
 
   render();
 
@@ -1394,9 +1314,13 @@ document.getElementById(
   "again"
 ).onclick = function(event) {
 
+  /*
+     Stop this click from also
+     triggering the card.
+  */
 
-    card.correct =0;
   event.stopPropagation();
+
 
   if (isDayComplete()) {
 
@@ -1410,7 +1334,7 @@ document.getElementById(
 
 
   /*
-     Get current card.
+     Get the current card ID.
   */
 
   const currentId =
@@ -1427,30 +1351,77 @@ document.getElementById(
 
 
   /*
-     Remove from front.
+     IMPORTANT:
+
+     Get the actual card before
+     changing its score.
+  */
+
+  const card =
+    getCardById(currentId);
+
+
+  if (!card) {
+
+    return;
+
+  }
+
+
+  /*
+     AGAIN ALWAYS RESETS THE SCORE TO ZERO.
+
+     Examples:
+
+     0/3 -> 0/3
+     1/3 -> 0/3
+     2/3 -> 0/3
+
+     The learner must therefore get
+     the word correct three fresh times.
+  */
+
+  card.correct = 0;
+
+
+  /*
+     Remove the card from the
+     front of the queue.
   */
 
   day.queue.shift();
 
 
   /*
-     Put at back.
+     Put the card at the BACK of
+     the queue.
 
-     IMPORTANT:
-
-     The correct score DOES NOT CHANGE.
+     It will appear again later.
   */
 
   day.queue.push(
-    currentId
+    card.id
   );
 
-card.correct =0;
+
+  /*
+     Save immediately so the
+     zero score persists.
+  */
+
   save();
 
 
+  /*
+     Hide the answer.
+  */
+
   revealed = false;
 
+
+  /*
+     Show the next card.
+  */
 
   render();
 
@@ -1458,13 +1429,12 @@ card.correct =0;
 
 
 /* =========================================================
-   RESET ONLY THIS DAY
+   RESET ONLY CURRENT DAY
    ========================================================= */
 
 document.getElementById(
   "resetDay"
 ).onclick = function(event) {
-
 
   event.stopPropagation();
 
@@ -1477,7 +1447,7 @@ document.getElementById(
     confirm(
       `Reset ${dayName} only?\n\n` +
       `All scores for ${dayName} will be reset.\n\n` +
-      `The other 9 days will NOT be changed.`
+      `The other days will NOT be changed.`
     );
 
 
@@ -1489,7 +1459,7 @@ document.getElementById(
 
 
   /*
-     ONLY THIS DAY is recreated.
+     Recreate ONLY the selected day.
   */
 
   createDay(currentDay);
@@ -1518,4 +1488,3 @@ render();
 </body>
 
 </html>
-```
